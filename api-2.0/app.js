@@ -1,349 +1,170 @@
-'use strict';
-const log4js = require('log4js');
-const logger = log4js.getLogger('BasicNetwork');
+const express = require('express');
 const bodyParser = require('body-parser');
-const http = require('http')
-const util = require('util');
-const express = require('express')
-const app = express();
-const expressJWT = require('express-jwt');
-const jwt = require('jsonwebtoken');
-const bearerToken = require('express-bearer-token');
+const mongoose = require('mongoose');
 const cors = require('cors');
-const constants = require('./config/constants.json')
+const user = require('./model/User');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const helper = require('../app/helper');
 
-const host = process.env.HOST || constants.host;
-const port = process.env.PORT || constants.port;
+require('dotenv').config();
 
+const app = express();
+let refreshTokens = [];
 
-const helper = require('./app/helper')
-const invoke = require('./app/invoke')
-const qscc = require('./app/qscc')
-const query = require('./app/query')
+// sambungan ke database
+const db = require('./model/index');
+const { json } = require('express/lib/response');
+// const database = process.env.MONGO_URI || "mongodb://localhost:27017/mangojs"
+const port = process.env.PORT || 5050;
 
-app.options('*', cors());
+// pengecekan berjalan di port . . .
+app.listen(port, function () {
+  console.log('server berjalan  di port ' + port);
+});
+
 app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({
-    extended: false
-}));
-// set secret variable
-app.set('secret', 'thisismysecret');
-app.use(expressJWT({
-    secret: 'thisismysecret'
-}).unless({
-    path: ['/users','/users/login', '/register']
-}));
-app.use(bearerToken());
+app.use(
+  bodyParser.json({
+    extended: true,
+    limit: '50mb',
+  })
+);
+app.use(
+  bodyParser.urlencoded({
+    extended: true,
+    limit: '50mb',
+  })
+);
 
-logger.level = 'debug';
+// register
+app.post('/api/registrasi/', async (req, res) => {
+  // get data nama lengkap, username, password, role
+  var namaLengkap = req.body.namaLengkap;
+  var userName = req.body.userName;
+  var password = req.body.password;
+  var role = req.body.role;
 
+  if (!namaLengkap) {
+    res.status(400).json(getErrorMessage("'namaLengkap'"));
+    return;
+  }
+  if (!userName) {
+    res.status(400).json(getErrorMessage("'userName'"));
+    return;
+  }
+  if (!password) {
+    res.status(400).json(getErrorMessage("'password'"));
+    return;
+  }
+  if (!role) {
+    res.status(400).json(getErrorMessage("'role'"));
+    return;
+  }
 
-app.use((req, res, next) => {
-    logger.debug('New req for %s', req.originalUrl);
-    if (req.originalUrl.indexOf('/users') >= 0 || req.originalUrl.indexOf('/users/login') >= 0 || req.originalUrl.indexOf('/register') >= 0) {
-        return next();
+  // wallet input. register ke sistem blockchain --> helper
+  let pesan = await helper.getRegisteredUser(userName, role, true);
+
+  // fungsi buat register --> helper
+  let response = await helper.registerUserMongo(req, res);
+
+  try {
+    console.log('User success !!', response);
+  } catch (err) {
+    console.log(err);
+    return res.status(400).json({ status: 'error' });
+  }
+
+  res.json({ status: 'ok' });
+  res.status(201).json({ message: pesan, data: response });
+});
+
+// login
+app.post('/api/login', async (req, res) => {
+  const { userName, password, role } = req.body;
+
+  // wallet input. login ke sistem blockchain --> helper
+  let isUserRegistered = await helper.isUserRegistered(userName, role);
+
+  //   const { userName, password } = req.body;
+  if (isUserRegistered) {
+    // fungsi buat loginnnya --> helper
+    let data = await helper.loginUserMongo(req, res);
+
+    const id = { id: data._id };
+    if (await bcrypt.compare(password, data.password)) {
+      const accessToken = generateAccessToken(id);
+      const refreshToken = jwt.sign(id, process.env.REFRESH_TOKEN_SECRET);
+      // refreshToken.push(refreshTokens)
+
+      return res.status(201).json({ status: 'selamat datang ' + data.userName, accessToken: accessToken, refreshToken: refreshToken });
     }
-    var token = req.token;
-    jwt.verify(token, app.get('secret'), (err, decoded) => {
-        if (err) {
-            console.log(`Error ================:${err}`)
-            res.send({
-                success: false,
-                message: 'Failed to authenticate token. Make sure to include the ' +
-                    'token returned from /users call in the authorization header ' +
-                    ' as a Bearer token'
-            });
-            return;
-        } else {
-            req.username = decoded.username;
-            req.orgname = decoded.orgName;
-            logger.debug(util.format('Decoded from JWT token: username - %s, orgname - %s', decoded.username, decoded.orgName));
-            return next();
-        }
+
+    const refreshToken = accessToken;
+  }
+
+  //   const data = await user.findOne({ userName }).lean();
+  //   // res.json(data);
+
+  //   if (!data) {
+  //     return res.status(404).json({ status: 'error', error: 'invalid username/password' });
+  //   }
+});
+
+//logout
+app.delete('/api/logout/', async (req, res) => {
+  refreshTokens = await refreshTokens.filter((token) => token !== req.body.token);
+  res.json({ status: 'error', error: req.body.taken });
+});
+
+//get profile user login
+app.get('/api/profile/:userName', authenticateToken, async (req, res) => {
+  const { userName } = req.params;
+
+  user
+    .find({
+      userName,
+    })
+
+    .then((result) => {
+      res.send(result);
+    })
+    .catch((err) => {
+      res.send(err);
     });
 });
 
-var server = http.createServer(app).listen(port, function () { console.log(`Server started on ${port}`) });
-logger.info('****************** SERVER STARTED ************************');
-logger.info('***************  http://%s:%s  ******************', host, port);
-server.timeout = 240000;
+//request token
+app.post('/api/token', async (req, res) => {
+  const refreshToken = req.body.token;
+  if (refreshToken === null) return res.json({ status: 'user belum login' });
+  if (!refreshTokens.includes(refreshToken)) return res.json({ status: 'akses ditolak' });
+  jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, id) => {
+    if (err) return res.sendStatus(403);
+    const accessToken = generateAccessToken(id);
+    res.json({ accessToken: accessToken });
+  });
+});
 
-function getErrorMessage(field) {
-    var response = {
-        success: false,
-        message: field + ' field is missing or Invalid in the request'
-    };
-    return response;
+//autentikasi token jwt
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token === null) {
+    return res.status(401).json({ message: 'user not login' });
+  }
+
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, id) => {
+    if (err) return res.status(401).json({ message: 'token not valid' });
+    req.id = id;
+    next();
+  });
 }
 
-// Register and enroll user
-app.post('/users', async function (req, res) {
-    var username = req.body.username;
-    var orgName = req.body.orgName;
-    logger.debug('End point : /users');
-    logger.debug('User name : ' + username);
-    logger.debug('Org name  : ' + orgName);
-    if (!username) {
-        res.json(getErrorMessage('\'username\''));
-        return;
-    }
-    if (!orgName) {
-        res.json(getErrorMessage('\'orgName\''));
-        return;
-    }
+function generateAccessToken(id) {
+  return jwt.sign(id, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '3600s' });
+}
 
-    var token = jwt.sign({
-        exp: Math.floor(Date.now() / 1000) + parseInt(constants.jwt_expiretime),
-        username: username,
-        orgName: orgName
-    }, app.get('secret'));
-
-    let response = await helper.getRegisteredUser(username, orgName, true);
-
-    logger.debug('-- returned from registering the username %s for organization %s', username, orgName);
-    if (response && typeof response !== 'string') {
-        logger.debug('Successfully registered the username %s for organization %s', username, orgName);
-        response.token = token;
-        res.json(response);
-    } else {
-        logger.debug('Failed to register the username %s for organization %s with::%s', username, orgName, response);
-        res.json({ success: false, message: response });
-    }
-
-});
-
-// Register and enroll user
-app.post('/register', async function (req, res) {
-    var username = req.body.username;
-    var orgName = req.body.orgName;
-    logger.debug('End point : /users');
-    logger.debug('User name : ' + username);
-    logger.debug('Org name  : ' + orgName);
-    if (!username) {
-        res.json(getErrorMessage('\'username\''));
-        return;
-    }
-    if (!orgName) {
-        res.json(getErrorMessage('\'orgName\''));
-        return;
-    }
-
-    var token = jwt.sign({
-        exp: Math.floor(Date.now() / 1000) + parseInt(constants.jwt_expiretime),
-        username: username,
-        orgName: orgName
-    }, app.get('secret'));
-
-    console.log(token)
-
-    let response = await helper.registerAndGerSecret(username, orgName);
-
-    logger.debug('-- returned from registering the username %s for organization %s', username, orgName);
-    if (response && typeof response !== 'string') {
-        logger.debug('Successfully registered the username %s for organization %s', username, orgName);
-        response.token = token;
-        res.json(response);
-    } else {
-        logger.debug('Failed to register the username %s for organization %s with::%s', username, orgName, response);
-        res.json({ success: false, message: response });
-    }
-
-});
-
-// Login and get jwt
-app.post('/users/login', async function (req, res) {
-    var username = req.body.username;
-    var orgName = req.body.orgName;
-    logger.debug('End point : /users');
-    logger.debug('User name : ' + username);
-    logger.debug('Org name  : ' + orgName);
-    if (!username) {
-        res.json(getErrorMessage('\'username\''));
-        return;
-    }
-    if (!orgName) {
-        res.json(getErrorMessage('\'orgName\''));
-        return;
-    }
-
-    var token = jwt.sign({
-        exp: Math.floor(Date.now() / 1000) + parseInt(constants.jwt_expiretime),
-        username: username,
-        orgName: orgName
-    }, app.get('secret'));
-
-    let isUserRegistered = await helper.isUserRegistered(username, orgName);
-
-    if (isUserRegistered) {
-        res.json({ success: true, message: { token: token } });
-
-    } else {
-        res.json({ success: false, message: `User with username ${username} is not registered with ${orgName}, Please register first.` });
-    }
-});
-
-
-// Invoke transaction on chaincode on target peers
-app.post('/channels/:channelName/chaincodes/:chaincodeName', async function (req, res) {
-    try {
-        logger.debug('==================== INVOKE ON CHAINCODE ==================');
-        var peers = req.body.peers;
-        var chaincodeName = req.params.chaincodeName;
-        var channelName = req.params.channelName;
-        var fcn = req.body.fcn;
-        var args = req.body.args;
-        var transient = req.body.transient;
-        console.log(`Transient data is ;${transient}`)
-        logger.debug('channelName  : ' + channelName);
-        logger.debug('chaincodeName : ' + chaincodeName);
-        logger.debug('fcn  : ' + fcn);
-        logger.debug('args  : ' + args);
-        if (!chaincodeName) {
-            res.json(getErrorMessage('\'chaincodeName\''));
-            return;
-        }
-        if (!channelName) {
-            res.json(getErrorMessage('\'channelName\''));
-            return;
-        }
-        if (!fcn) {
-            res.json(getErrorMessage('\'fcn\''));
-            return;
-        }
-        if (!args) {
-            res.json(getErrorMessage('\'args\''));
-            return;
-        }
-
-        let message = await invoke.invokeTransaction(channelName, chaincodeName, fcn, args, req.username, req.orgname, transient);
-        console.log(`message result is : ${message}`)
-
-        const response_payload = {
-            result: message,
-            error: null,
-            errorData: null
-        }
-        res.send(response_payload);
-
-    } catch (error) {
-        const response_payload = {
-            result: null,
-            error: error.name,
-            errorData: error.message
-        }
-        res.send(response_payload)
-    }
-});
-
-app.get('/channels/:channelName/chaincodes/:chaincodeName', async function (req, res) {
-    try {
-        logger.debug('==================== QUERY BY CHAINCODE ==================');
-
-        var channelName = req.params.channelName;
-        var chaincodeName = req.params.chaincodeName;
-        console.log(`chaincode name is :${chaincodeName}`)
-        let args = req.query.args;
-        let fcn = req.query.fcn;
-        let peer = req.query.peer;
-
-        logger.debug('channelName : ' + channelName);
-        logger.debug('chaincodeName : ' + chaincodeName);
-        logger.debug('fcn : ' + fcn);
-        logger.debug('args : ' + args);
-
-        if (!chaincodeName) {
-            res.json(getErrorMessage('\'chaincodeName\''));
-            return;
-        }
-        if (!channelName) {
-            res.json(getErrorMessage('\'channelName\''));
-            return;
-        }
-        if (!fcn) {
-            res.json(getErrorMessage('\'fcn\''));
-            return;
-        }
-        if (!args) {
-            res.json(getErrorMessage('\'args\''));
-            return;
-        }
-        console.log('args==========', args);
-        args = args.replace(/'/g, '"');
-        args = JSON.parse(args);
-        logger.debug(args);
-
-        let message = await query.query(channelName, chaincodeName, args, fcn, req.username, req.orgname);
-
-        const response_payload = {
-            result: message,
-            error: null,
-            errorData: null
-        }
-
-        res.send(response_payload);
-    } catch (error) {
-        const response_payload = {
-            result: null,
-            error: error.name,
-            errorData: error.message
-        }
-        res.send(response_payload)
-    }
-});
-
-app.get('/qscc/channels/:channelName/chaincodes/:chaincodeName', async function (req, res) {
-    try {
-        logger.debug('==================== QUERY BY CHAINCODE ==================');
-
-        var channelName = req.params.channelName;
-        var chaincodeName = req.params.chaincodeName;
-        console.log(`chaincode name is :${chaincodeName}`)
-        let args = req.query.args;
-        let fcn = req.query.fcn;
-        // let peer = req.query.peer;
-
-        logger.debug('channelName : ' + channelName);
-        logger.debug('chaincodeName : ' + chaincodeName);
-        logger.debug('fcn : ' + fcn);
-        logger.debug('args : ' + args);
-
-        if (!chaincodeName) {
-            res.json(getErrorMessage('\'chaincodeName\''));
-            return;
-        }
-        if (!channelName) {
-            res.json(getErrorMessage('\'channelName\''));
-            return;
-        }
-        if (!fcn) {
-            res.json(getErrorMessage('\'fcn\''));
-            return;
-        }
-        if (!args) {
-            res.json(getErrorMessage('\'args\''));
-            return;
-        }
-        console.log('args==========', args);
-        args = args.replace(/'/g, '"');
-        args = JSON.parse(args);
-        logger.debug(args);
-
-        let response_payload = await qscc.qscc(channelName, chaincodeName, args, fcn, req.username, req.orgname);
-
-        // const response_payload = {
-        //     result: message,
-        //     error: null,
-        //     errorData: null
-        // }
-
-        res.send(response_payload);
-    } catch (error) {
-        const response_payload = {
-            result: null,
-            error: error.name,
-            errorData: error.message
-        }
-        res.send(response_payload)
-    }
-});
+//penghubung ke routes
+const allRegister = require('./routes/auth');
+app.use('/api', authenticateToken, allRegister);
