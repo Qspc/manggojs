@@ -2,10 +2,10 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const user = require('./model/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const helper = require('../app/helper');
+const user = require('./model/user');
 
 require('dotenv').config();
 
@@ -97,7 +97,9 @@ app.post('/api/login', async (req, res) => {
       const refreshToken = jwt.sign(id, process.env.REFRESH_TOKEN_SECRET);
       // refreshToken.push(refreshTokens)
 
-      return res.status(201).json({ status: 'selamat datang ' + data.userName, accessToken: accessToken, refreshToken: refreshToken });
+      return res.status(201).json({ status: 'selamat datang ' + data.userName + ' dengan role ' + data.role, accessToken: accessToken, refreshToken: refreshToken });
+    } else {
+      return res.status(404).json({ status: 'error', error: 'invalid password' });
     }
 
     const refreshToken = accessToken;
@@ -167,4 +169,6 @@ function generateAccessToken(id) {
 
 //penghubung ke routes
 const allRegister = require('./routes/auth');
+const ScRegister = require('./routes/sc');
 app.use('/api', authenticateToken, allRegister);
+app.use('/sc', ScRegister);

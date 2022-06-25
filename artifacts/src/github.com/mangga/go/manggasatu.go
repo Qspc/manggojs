@@ -104,8 +104,8 @@ func (s *ManggaContract) RegistrasiBenih(ctx contractapi.TransactionContextInter
 		return "", fmt.Errorf("Please pass the correct benih data")
 	}
 
-	// data yg dibawa : manggaData (data dari fe)
-	// data yg dikirim : varietas, kuantitas, umur benih, ;createdat, ;ID, ;benihID
+	// data yg dibawa : manggaData (varietas, umur benih, kuantitas)
+	// data yg dikirim : createdat, ID, benihID, isasset
 	mangga := new(Mangga)
 
 	// set createdAt
@@ -191,8 +191,8 @@ func (s *ManggaContract) CreateTrxManggaByPenangkar(ctx contractapi.TransactionC
 		return "", fmt.Errorf("Please pass the correct benih aset id")
 	}
 
-	//data yang dibawah : manggaData (inputan dari fe), PrevID (data dari block sebelumnya)
-	//data yang dikirim : ;nama pengirim, ;kontak pengirim, ;alamat pengirim, ;nama penerima, ;kontak penerima, ;alamat penerima, ;kuantitas benih, ;varietas benih, ;umur benih, ;harga benih (kg), ;harga benih total, ;cara pembayaran, ;createdAt, ;ID, ;BenihID, ;TxID1
+	//data yang dibawah : manggaData (inputan dari fe : nama pemberi, nama penerima, kuantitas, harga kg, cara pembayaran), PrevID (ID dari block sebelumnya)
+	//data yang dibikin :  harga benih total,  createdAt, ID, TxID1, isAsset = false
 
 	manggaPrev, err := s.GetManggaByID(ctx, prevID) 
 
@@ -219,10 +219,10 @@ func (s *ManggaContract) CreateTrxManggaByPenangkar(ctx contractapi.TransactionC
 	// Get penangkar unique value from benih aset
 	manggaNew.UmurBenih = manggaPrev.UmurBenih
 	manggaNew.VarietasBenih = manggaPrev.VarietasBenih
-	manggaNew.KuantitasBenihKg = manggaPrev.KuantitasBenihKg
+	manggaNew.KuantitasBenihKg = manggaPrev.KuantitasBenihKg // sebenernya gak perlu
 	// manggaNew.HargaBenihPerKg = manggaPrev.HargaBenihPerKg
 
-	// insert data dari fe : nama pengirim,  nama penerima, harga benih (kg), cara pembayaran. lalu masukan data dari manggaData ke manggaNew
+	// insert data dari fe : nama pengirim,  nama penerima, kuantitas benih,  harga benih (kg), cara pembayaran. lalu masukan data dari manggaData ke manggaNew
 	err = json.Unmarshal([]byte(manggaData), &manggaNew)
 
 	if err != nil {
@@ -285,8 +285,8 @@ func (s *ManggaContract) TanamBenih(ctx contractapi.TransactionContextInterface,
 		return "", fmt.Errorf("Please pass the correct mangga transaction id")
 	}
 
-	// data yang dibawa : manggaData (data dari fe), PrevID (data dari blockchain sebelumnya)
-	// data yang dikirim : ;nama petani, ;kuantitas benih, ;tanggal tanam, ;lokasi lahan, ;pupuk, ;ID, ;ManggaID, ;CreatedAt, dan "data sebelumnya" 
+	// data yang dibawa : manggaData (data dari fe : pupul, lokasi lahan), PrevID (ID dari blockchain sebelumnya)
+	// data yang dikirim : tanggal tanam, ;ID, ;ManggaID, isAsset = true 
 
 	//proses unmarshal data blockchain sebelumnya untuk dipakai sekarang
 	manggaPrev, err := s.GetManggaByID(ctx, prevID) 
@@ -361,8 +361,8 @@ func (s *ManggaContract) PanenMangga(ctx contractapi.TransactionContextInterface
 		return "", fmt.Errorf("Please pass the correct mangga id")
 	}
 
-	// data yang dibawa : manggaData (data dari fe), manggaID (id mangga yg diproses)
-	// data yg dikirim : ;tanggal panen, ;kuantitas mangga, ;ukuran, ;pestisida, ;kadar air, ;perlakuan, ;produktivitas, createdAt
+	// data yang dibawa : manggaData (data dari fe : kuantitas mangga, ukuran, pestisida, kadar air, perlakuan, produktivitas), manggaID (id mangga yg diproses)
+	// data yg dikirim : tanggal panen
 
 	manggaAsBytes, err := ctx.GetStub().GetState(manggaID)
 
@@ -411,8 +411,8 @@ func (s *ManggaContract) CreateTrxManggaByPetani(ctx contractapi.TransactionCont
 		return "", fmt.Errorf("Please pass the correct mangga aset id")
 	}
 
-	// data yang dibawa : manggadata (data dari fe), prevID (data dari blockchain sebelumnya)
-	// data yang dikirim : ;nama pengirim, ;kontak pengirim, ;alamat pengirim, ;nama penerima, ;kontak penerima, ;alamat penerima, ;harga mangga (kg), harga mangga total, ;tanggal transaksi, cara pembayaran, ;createdAt, ;ID, ;TxId2,  dan "data sebelumnya"
+	// data yang dibawa : manggadata (data dari fe : nama pengirim, nama penerima, kuantitas mangga, harga mangga (kg), cara pembayaran), prevID (ID dari blockchain sebelumnya)
+	// data yang dikirim : tanggal transaksi, ID, TxId2, isAssetv= false
 
 	manggaPrev, err := s.GetManggaByID(ctx, prevID) 
 
@@ -456,9 +456,9 @@ func (s *ManggaContract) CreateTrxManggaByPetani(ctx contractapi.TransactionCont
 	manggaNew.Perlakuan = manggaPrev.Perlakuan
 	manggaNew.Produktivitas = manggaPrev.Produktivitas
 	manggaNew.TanggalPanen = manggaPrev.TanggalPanen
-	manggaNew.KuantitasManggaKg = manggaPrev.KuantitasManggaKg
+	manggaNew.KuantitasManggaKg = manggaPrev.KuantitasManggaKg // gak perlu
 
-	// data tambahan dari fe : nama pengirim, nama penerima, harga mangga (kg), cara pembayaran
+	// data tambahan dari fe : nama pengirim, nama penerima, kuantitas mangga, harga mangga (kg), cara pembayaran
 	err = json.Unmarshal([]byte(manggaData), &manggaNew)
 
 	if err != nil {
@@ -506,8 +506,8 @@ func (s *ManggaContract) CreateTrxManggaByPengumpul(ctx contractapi.TransactionC
 		return "", fmt.Errorf("Please pass the correct mangga aset id")
 	}
 
-	// data yang dibawa : manggaData (data dari fe), prevId (data dari block sebelumnya)
-	// data yang dikirim : ;nama pengirim, ;kontak pengirim, ;alamat pengirim, ;nama penerima, ;kontak penerima, ;alamat penerima, ;kuantitas mangga, ;harga mangga (kg), harga mangga total, ;tanggal transaksi, ;teknik sorting, ;metode pengemasan, ;cara pengangkutan, ;cara pembayaran, ;createdAt, ;ID, ;TxID3
+	// data yang dibawa : manggaData (data dari fe : nama pengirim, nama penerima, kuantitas mangga, harga mangga (kg), teknik sorting, metode pengemasan, cara pengangkutan, cara pembayaran), prevId (ID dari block sebelumnya)
+	// data yang dikirim : harga mangga total, tanggal transaksi, ID, TxID3
 
 	manggaPrev, err := s.GetManggaByID(ctx, prevID) 
 
@@ -604,8 +604,8 @@ func (s *ManggaContract) CreateTrxManggaByPedagang(ctx contractapi.TransactionCo
 		return "", fmt.Errorf("Please pass the correct mangga aset id")
 	}
 
-	// data yang dibawa : manggaData (data dari fe), prevId (data dari block sebelumnya)
-	// data yang dikirim : ;nama pengirim, ;kontak pengirim, ;alamat pengirim, ;nama penerima, ;kuantitas mangga, ;harga mangga (kg), harga mangga total, ;teknik sorting, ;metode pengemasan, ;cara pengangkutan, ;cara pembayaran, ;createdAt, ;ID, ;TxID3
+	// data yang dibawa : manggaData (data dari fe : nama pengirim,  nama pembeli, kuantitas mangga, harga mangga (kg), teknik sorting, metode pengemasan, cara pengangkutan, cara pembayaran), prevId (data dari block sebelumnya)
+	// data yang dikirim : harga mangga total, tanggal transaksi, ID, ;TxID4, isConfirmed = true
 
 	manggaPrev, err := s.GetManggaByID(ctx, prevID) 
 
@@ -657,7 +657,7 @@ func (s *ManggaContract) CreateTrxManggaByPedagang(ctx contractapi.TransactionCo
 	//get pengumpul unique field from mangga aset
 
 
-	// tambah data dari fe nama pengirim, kontak pengirim, alamat pengirim, nama penerima, kuantitas mangga, harga mangga (kg), teknik sorting, metode pengemasan, cara pengangkutan, cara pembayaran
+	// tambah data dari fe nama pengirim,  nama pembeli, kuantitas mangga, harga mangga (kg), teknik sorting, metode pengemasan, cara pengangkutan, cara pembayaran
 	err = json.Unmarshal([]byte(manggaData), &manggaNew)
 
 	if err != nil {
@@ -701,7 +701,7 @@ func (s *ManggaContract) ConfirmTrxByID(ctx contractapi.TransactionContextInterf
 	}
 
 	// data yang dibawa : manggaID (id mangga yg bersangkutan)
-	// data yg dikirim : isConfirmed = true
+	// data yg dibikin : isConfirmed = true, TanggalMasuk
 
 	manggaAsBytes, err := ctx.GetStub().GetState(manggaID)
 
@@ -749,6 +749,7 @@ func (s *ManggaContract) RejectTrxByID(ctx contractapi.TransactionContextInterfa
 	}
 
 	// data yg dibawa : manggaIDPrev (id mangga yg bersangkutan), manggaIDReject, kuantitasPrev (untuk balikin kuantitas mangga ke semula), rejectReason (alasan menolak)
+	// data yg dibikin : isRejected = true
 
 	manggaPrevAsBytes, err := ctx.GetStub().GetState(manggaIDPrev)
 
@@ -870,6 +871,7 @@ func (s *UserContract) CreateUser(ctx contractapi.TransactionContextInterface, u
 }
 
 // Get mangga object by ID
+// fungsi query
 // mengambil data mangga, lalu melakukan proses unmarshal agar dapat dipakai saat transaksi
 func (s *ManggaContract) GetManggaByID(ctx contractapi.TransactionContextInterface, manggaID string) (*Mangga, error) {
 	if len(manggaID) == 0 {

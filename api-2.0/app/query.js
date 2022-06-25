@@ -6,8 +6,20 @@ const logger = log4js.getLogger('BasicNetwork');
 const util = require('util');
 
 const helper = require('./helper');
-const queryTransaction = async (channelName, chaincodeName, args, fcn, username, orgName) => {
+
+const queryTransaction = async (channelName, chaincodeName, args, fcn, role, userName) => {
   try {
+    var roleAktor;
+    if (role == 1) {
+      roleAktor = 'Penangkar';
+    } else if (role == 2) {
+      roleAktor = 'Petani';
+    } else if (role == 3) {
+      roleAktor = 'Pengumpul';
+    } else if (role == 4) {
+      roleAktor = 'Pedagang';
+    }
+
     let random = Math.floor(Math.random() * 4);
     switch (random) {
       case 0:
@@ -26,24 +38,25 @@ const queryTransaction = async (channelName, chaincodeName, args, fcn, username,
         break;
     }
 
-    username = 'admin';
+    userName = 'admin';
 
     // load the network configuration
     // const ccpPath = path.resolve(__dirname, '..', 'config', 'connection-org1.json');
     // const ccpJSON = fs.readFileSync(ccpPath, 'utf8')
-    const ccp = await helper.getCCP(orgName); //JSON.parse(ccpJSON);
+
+    const ccp = await helper.getCCP(roleAktor); //identifikasi role
 
     // Create a new file system based wallet for managing identities.
-    const walletPath = await helper.getWalletPath(orgName); //.join(process.cwd(), 'wallet');
+    const walletPath = await helper.getWalletPath(roleAktor); //.join(process.cwd(), 'wallet');
     const wallet = await Wallets.newFileSystemWallet(walletPath);
     console.log(`Wallet path: ${walletPath}`);
 
     // Check to see if we've already enrolled the user.
-    let identity = await wallet.get(username);
+    let identity = await wallet.get(userName);
     if (!identity) {
-      console.log(`An identity for the user ${username} does not exist in the wallet, so registering user`);
-      await helper.getRegisteredUser(username, orgName, true);
-      identity = await wallet.get(username);
+      console.log(`An identity for the user ${userName} does not exist in the wallet, so registering user`);
+      await helper.getRegisteredUser(userName, orgName, true);
+      identity = await wallet.get(userName);
       console.log('Register first before retrying');
       return;
     }
@@ -52,7 +65,7 @@ const queryTransaction = async (channelName, chaincodeName, args, fcn, username,
     const gateway = new Gateway();
     await gateway.connect(ccp, {
       wallet,
-      identity: username,
+      identity: userName,
       discovery: { enabled: true, asLocalhost: true },
     });
 

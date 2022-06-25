@@ -11,6 +11,7 @@ const bcrypt = require('bcrypt');
 
 const util = require('util');
 
+// identifikasi role dari user ---> invoke
 const getCCP = async (org) => {
   let ccpPath;
   if (org == 'Penangkar') {
@@ -42,6 +43,7 @@ const getCaUrl = async (org, ccp) => {
   return caURL;
 };
 
+// mengambil path/jalur url saat ini ditambah dengan role nya. misal sc/channel/penangkar-wallet --> invoke
 const getWalletPath = async (org) => {
   let walletPath;
   if (org == 'Penangkar' || org == 'penangkar') {

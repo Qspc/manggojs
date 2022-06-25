@@ -9,19 +9,34 @@ const util = require('util');
 const helper = require('./helper');
 const { blockListener, contractListener } = require('./Listeners');
 
-const invokeTransaction = async (channelName, chaincodeName, fcn, args, username, orgName, transientData) => {
+// fungsi menerima data seputar blockchain berdasarkan parameter yang dikirim
+const invokeTransaction = async (channelName, chaincodeName, fcn, args, userName, role, transientData) => {
   try {
-    const ccp = await helper.getCCP(orgName);
+    var roleAktor;
+    if (role == 1) {
+      roleAktor = 'Penangkar';
+    } else if (role == 2) {
+      roleAktor = 'Petani';
+    } else if (role == 3) {
+      roleAktor = 'Pengumpul';
+    } else if (role == 4) {
+      roleAktor = 'Pedagang';
+    }
 
-    const walletPath = await helper.getWalletPath(orgName);
+    //identifikasi role
+    const ccp = await helper.getCCP(roleAktor);
+    // mengambil jalur path
+    const walletPath = await helper.getWalletPath(roleAktor);
+    // menegecek role di fabric
     const wallet = await Wallets.newFileSystemWallet(walletPath);
     console.log(`Wallet path: ${walletPath}`);
 
-    let identity = await wallet.get(username);
+    // identifikasi nama username di blockchain
+    let identity = await wallet.get(userName);
     if (!identity) {
-      console.log(`An identity for the user ${username} does not exist in the wallet, so registering user`);
-      await helper.getRegisteredUser(username, orgName, true);
-      identity = await wallet.get(username);
+      console.log(`An identity for the user ${userName} does not exist in the wallet, so registering user`);
+      await helper.getRegisteredUser(userName, role, true);
+      identity = await wallet.get(userName);
       console.log('Register first before retrying ');
       return;
     }
@@ -30,15 +45,18 @@ const invokeTransaction = async (channelName, chaincodeName, fcn, args, username
 
     const connectOptions = {
       wallet,
-      identity: username,
+      identity: userName,
       discovery: { enabled: true, asLocalhost: true },
       eventHandlerOptions: EventStrategies.NONE,
     };
 
+    // gateaway = koneksi untuk mengambil jalur jaringan fabric
     const gateway = new Gateway();
     await gateway.connect(ccp, connectOptions);
 
+    //ambil nama channel
     const network = await gateway.getNetwork(channelName);
+    //ambil nama chaincode
     const contract = network.getContract(chaincodeName);
 
     // await contract.addContractListener(contractListener);
@@ -48,14 +66,17 @@ const invokeTransaction = async (channelName, chaincodeName, fcn, args, username
     let result;
     let message;
 
+    // identifikasi fungsi/perintah apa yang digunakan
     switch (fcn) {
       case 'RegistrasiBenih':
-        result = await contract.submitTransaction('ManggaContract:' + fcn, args[0]);
+        // fungsi/perintah dijalankan ----> mangga.go
+        result = await contract.submitTransaction('ManggaContract:' + fcn, args[0]); // informasi benih
         console.log(result.toString());
+        // output dari hasil fungsi/perintah ---> return
         result = { txid: result.toString() };
         break;
       case 'TanamBenih':
-        result = await contract.submitTransaction('ManggaContract:' + fcn, args[0], args[1]);
+        result = await contract.submitTransaction('ManggaContract:' + fcn, args[0], args[1]); //info mangga, data dari block sebelumnya
         console.log(result.toString());
         result = { txid: result.toString() };
         break;
@@ -147,7 +168,8 @@ const invokeTransaction = async (channelName, chaincodeName, fcn, args, username
     // result = JSON.parse(result.toString());
 
     let response = {
-      message: message,
+      // message: message,
+      message: `transaction successfully`,
       result,
     };
 
