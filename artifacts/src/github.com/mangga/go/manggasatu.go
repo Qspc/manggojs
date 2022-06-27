@@ -1005,6 +1005,7 @@ func (s *UserContract) GetUserByID(ctx contractapi.TransactionContextInterface, 
 // fungsi query
 func (s *ManggaContract) GetManggaForQuery(ctx contractapi.TransactionContextInterface, queryString string) (string, error) {
 
+
 	
 	queryResults, err := s.getQueryResultForQueryString(ctx, queryString)
 

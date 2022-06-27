@@ -46,6 +46,7 @@ aplikasi :
 - docker
 - python
 - go lang
+- git
 
 package :
 

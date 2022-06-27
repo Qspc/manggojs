@@ -1,0 +1,6 @@
+- tambahkan package di configtx.yaml
+- createChannel butuh dua file
+- pake satu chaincode dulu
+- create-artifacts.sh setup lagi, ada yg diubah
+
+

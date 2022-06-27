@@ -50,7 +50,7 @@ setGlobalsForPeer0Pedagang(){
 
 presetup() {
     echo Vendoring Go dependencies ...
-    pushd ./artifacts/src/github.com/bawangmerah/go # ieu kudu diubah heula
+    pushd ./artifacts/src/github.com/mangga/go 
     GO111MODULE=on go mod vendor
     popd
     echo Finished vendoring Go dependencies
@@ -61,7 +61,7 @@ CHANNEL_NAME="channel1"
 CC_RUNTIME_LANGUAGE="golang"
 VERSION="3.22"
 SEQUENCE="43"
-CC_SRC_PATH="./artifacts/src/github.com/bawangmerah/go" # ieu kudu diubah heula
+CC_SRC_PATH="./artifacts/src/github.com/mangga/go" 
 CC_NAME="Manggach1_cc" ## nama chaincode
 
 packageChaincode() {
@@ -316,6 +316,7 @@ presetup
 packageChaincode
 installChaincode
 queryInstalled
+
 approveForMyPenangkar
 checkCommitReadynessPenangkar
 approveForMyPetani

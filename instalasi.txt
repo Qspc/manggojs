@@ -1,0 +1,53 @@
+versi bang ongki :
+
+- sudo su
+- cd /home/rifqi_prabantoro/bm-network
+- cd api-2.0/
+- nvm use 12
+- pm2 start app.js -------------> nyalain api ?
+
+- cd artifacts/ca-operations/
+- docker-compose up -d ---------> aktifin server hyperledger ?
+
+- cd artifacts
+- docker-compose up -d -----------> nyalain ke couchdb ?
+
+
+
+
+
+versi pavan :
+
+1. instalasi
+- cd artifacts/channel/create-certificate-with-ca
+- docker-compose up -d ------------------------> siapin tempat certificate authority untuk org1, org2, org3, orderer (di docker ada 4)
+- ./create-certificate-with-ca.sh -------------> create certificate authority untuk org1, org2, org3, orderer
+
+- cd artifacts/channel
+- ./create-artifacts.sh -----------------------> create channel artifacts 
+
+- cd ..
+- cd artifacts
+- docker-compose up -d -------------------------> join peer1, peer2, peer3, couchdb0, couchdb1, couchdb2, orderer0, orderer1, orderer2 (di docker ps ada 13)
+
+- cd ..
+- ./createChannel.sh ---------------------------> create channel
+
+- ./deployChaincode.sh ---------------------------> create chaincode
+
+
+- cd api-2.0/config
+- ./generate-gcp.sh
+
+- cd ..
+- node app.js
+
+
+= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+
+alur kodingan
+- mangga.go = tempat nyimpen function dari blockchain
+- router = 
+- controller =
+- invoke.js/query.js = 
+- helper.js = 
