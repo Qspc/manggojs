@@ -81,36 +81,32 @@ app.post('/api/registrasi/', async (req, res) => {
 
 // login
 app.post('/api/login', async (req, res) => {
-  const { userName, password, role } = req.body;
+  const { userName, password } = req.body;
 
-  // wallet input. login ke sistem blockchain --> helper
-  let isUserRegistered = await helper.isUserRegistered(userName, role);
+  // fungsi buat loginnnya --> helper
+  let data = await helper.loginUserMongo(req, res);
 
-  //   const { userName, password } = req.body;
-  if (isUserRegistered) {
-    // fungsi buat loginnnya --> helper
-    let data = await helper.loginUserMongo(req, res);
-
-    const id = { id: data._id };
-    if (await bcrypt.compare(password, data.password)) {
-      const accessToken = generateAccessToken(id);
-      const refreshToken = jwt.sign(id, process.env.REFRESH_TOKEN_SECRET);
-      // refreshToken.push(refreshTokens)
-
-      return res.status(201).json({ status: 'selamat datang ' + data.userName + ' dengan role ' + data.role, accessToken: accessToken, refreshToken: refreshToken });
-    } else {
-      return res.status(404).json({ status: 'error', error: 'invalid password' });
-    }
-
-    const refreshToken = accessToken;
+  const id = { id: data._id };
+  if (await bcrypt.compare(password, data.password)) {
+    const accessToken = generateAccessToken(id);
+    const refreshToken = jwt.sign(id, process.env.REFRESH_TOKEN_SECRET);
+    // refreshToken.push(refreshTokens)
+  } else {
+    return res.status(404).json({ status: 'error', error: 'invalid password' });
   }
 
-  //   const data = await user.findOne({ userName }).lean();
-  //   // res.json(data);
+  // const refreshToken = accessToken;
 
-  //   if (!data) {
-  //     return res.status(404).json({ status: 'error', error: 'invalid username/password' });
-  //   }
+  // wallet input. login ke sistem blockchain --> helper
+  let isUserRegistered = await helper.isUserRegistered(userName, data.role);
+
+  if (isUserRegistered) {
+    res.status(200).json({ status: 'selamat datang ' + data.userName + ' dengan role ' + data.role, Token: accessToken, refresh: refreshToken });
+  } else {
+    res.status(404).json({
+      message: `User ${username} with role ${orgName}, Please register first.`,
+    });
+  }
 });
 
 //logout

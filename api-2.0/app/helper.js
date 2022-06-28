@@ -412,7 +412,7 @@ const loginUserMongo = async (req, res) => {
 
   const data = await user.findOne({ userName }).lean();
   if (!data) {
-    return res.status(404).json({ status: 'error', error: 'invalid username/password' });
+    return res.status(404).json({ status: 'error', error: 'invalid username' });
   }
   return data;
 
