@@ -53,7 +53,8 @@ type Mangga struct {
 	HargaManggaPerKg  	float64 `json:"hargaManggaPerKg"`
 	HargaManggaTotal	float64	`json:"hargaManggaTotal"`
 
-	TanggalTransaksi 	int64	`json:"tanggaltransaksi"` // createdat with unix
+	TanggalTanam	int64 `json:"tanggalTanam"`
+	TanggalTransaksi 	int64	`json:"tanggalTransaksi"` // createdat with unix
 
 	// Unique Value
 	// From Penangkar
@@ -63,7 +64,6 @@ type Mangga struct {
 
 	// From Petani
 	Pupuk         	string 	`json:"pupuk"`
-	TanggalTanam	string `json:"tanggalTanam"`
 	LokasiLahan		string `json:"lokasiLahan"`
 	
 	Ukuran    	string 	`json:"ukuran"`
@@ -87,7 +87,7 @@ type Mangga struct {
 	TxID1 string `json:"txID1"` // penangkar - petani
 	TxID2 string `json:"txID2"` // petani - pengumpul
 	TxID3 string `json:"txID3"` // pengumpul - pedagang
-	TxID4 string `json:"txID4"` // pedagang besar - konsumen
+	TxID4 string `json:"txID4"` // pedagang - konsumen
 
 	IsAsset 	bool `json:"isAsset"`
 	IsConfirmed bool `json:"isConfirmed"`
@@ -104,12 +104,12 @@ func (s *ManggaContract) RegistrasiBenih(ctx contractapi.TransactionContextInter
 		return "", fmt.Errorf("Please pass the correct benih data")
 	}
 
-	// data yg dibawa : manggaData (varietas, umur benih, kuantitas)
-	// data yg dikirim : createdat, ID, benihID, isasset
+	// data yg dibawa : manggaData (varietasBenih, umurBenih, kuantitasBenihKg)
+	// data yg dikirim : TanggalTanam, id, benihID, isAsset
 	mangga := new(Mangga)
 
-	// set createdAt
-	mangga.CreatedAt = time.Now().Unix()
+	// set TanggalTanam
+	mangga.TanggalTanam = time.Now().Unix()
 	// Set ID (key)
 	mangga.ID = ctx.GetStub().GetTxID()
 	// Set BenihID
@@ -146,7 +146,7 @@ func (s *ManggaContract) AddKuantitasBenihByID(ctx contractapi.TransactionContex
 		return nil, fmt.Errorf("Please pass the correct mangga id")
 	}
 
-	// data yang dibawa : quantity (data update benih), manggaID (ID mangga yg bakal diupdate)
+	// data yang dibawa : quantity (data update benih), manggaID (ID sebelumnya)
 	// data yang dikirim : update benih
 
 	// get json mangga berdasarkan ID yg dituju
@@ -191,9 +191,10 @@ func (s *ManggaContract) CreateTrxManggaByPenangkar(ctx contractapi.TransactionC
 		return "", fmt.Errorf("Please pass the correct benih aset id")
 	}
 
-	//data yang dibawah : manggaData (inputan dari fe : nama pemberi, nama penerima, kuantitas, harga kg, cara pembayaran), PrevID (ID dari block sebelumnya)
-	//data yang dibikin :  harga benih total,  createdAt, ID, TxID1, isAsset = false
+	//data yang dibawah : manggaData (NamaPengirim, NamaPenerima, KuantitasBenihKg, HargaBenihPerKg, CaraPembayaran), PrevID (benihID yg dipakai)
+	//data yang dibikin :  HargaBenihTotal,  TanggalTransaksi, id, txID1, isAsset = false
 
+	// ambil informasi benih
 	manggaPrev, err := s.GetManggaByID(ctx, prevID) 
 
 	if err != nil {
@@ -203,7 +204,7 @@ func (s *ManggaContract) CreateTrxManggaByPenangkar(ctx contractapi.TransactionC
 	manggaNew := new(Mangga)
 
 	// tanggal transaksi
-	manggaNew.CreatedAt = time.Now().Unix()
+	manggaNew.TanggalTransaksi = time.Now().Unix()
 
 	// Set ID (key)
 	manggaNew.ID = ctx.GetStub().GetTxID()
@@ -219,10 +220,9 @@ func (s *ManggaContract) CreateTrxManggaByPenangkar(ctx contractapi.TransactionC
 	// Get penangkar unique value from benih aset
 	manggaNew.UmurBenih = manggaPrev.UmurBenih
 	manggaNew.VarietasBenih = manggaPrev.VarietasBenih
-	manggaNew.KuantitasBenihKg = manggaPrev.KuantitasBenihKg // sebenernya gak perlu
-	// manggaNew.HargaBenihPerKg = manggaPrev.HargaBenihPerKg
+	// manggaNew.KuantitasBenihKg = manggaPrev.KuantitasBenihKg // gak usah???
 
-	// insert data dari fe : nama pengirim,  nama penerima, kuantitas benih,  harga benih (kg), cara pembayaran. lalu masukan data dari manggaData ke manggaNew
+	// insert data dari fe : NamaPengirim, NamaPenerima, KuantitasBenihKg, HargaBenihPerKg, CaraPembayaran
 	err = json.Unmarshal([]byte(manggaData), &manggaNew)
 
 	if err != nil {
@@ -285,8 +285,8 @@ func (s *ManggaContract) TanamBenih(ctx contractapi.TransactionContextInterface,
 		return "", fmt.Errorf("Please pass the correct mangga transaction id")
 	}
 
-	// data yang dibawa : manggaData (data dari fe : pupul, lokasi lahan), PrevID (ID dari blockchain sebelumnya)
-	// data yang dikirim : tanggal tanam, ;ID, ;ManggaID, isAsset = true 
+	// data yang dibawa : manggaData (pupuk, lokasiLahan), PrevID (ID TxID1)
+	// data yang dikirim : tanggalTanam, id, manggaID, isAsset = true 
 
 	//proses unmarshal data blockchain sebelumnya untuk dipakai sekarang
 	manggaPrev, err := s.GetManggaByID(ctx, prevID) 
@@ -301,8 +301,6 @@ func (s *ManggaContract) TanamBenih(ctx contractapi.TransactionContextInterface,
 	_, err = s.updateKuantitasBenihByID(ctx, prevID, manggaPrev.KuantitasBenihKg)
 
 	manggaNew := new(Mangga)
-
-	manggaNew.CreatedAt = time.Now().Unix()
 	
 	// Set ID (key)
 	manggaNew.ID = ctx.GetStub().GetTxID()
@@ -329,7 +327,7 @@ func (s *ManggaContract) TanamBenih(ctx contractapi.TransactionContextInterface,
 	// Insert Tanggal Tanam
 	manggaNew.TanggalTanam = time.Now().Unix()
 
-	// menambah data dari fe : pupuk, lokasi lahan
+	// menambah data dari fe : pupuk, lokasiLahan
 	err = json.Unmarshal([]byte(manggaData), &manggaNew)
 
 	if err != nil {
@@ -361,8 +359,8 @@ func (s *ManggaContract) PanenMangga(ctx contractapi.TransactionContextInterface
 		return "", fmt.Errorf("Please pass the correct mangga id")
 	}
 
-	// data yang dibawa : manggaData (data dari fe : kuantitas mangga, ukuran, pestisida, kadar air, perlakuan, produktivitas), manggaID (id mangga yg diproses)
-	// data yg dikirim : tanggal panen
+	// data yang dibawa : manggaData (kuantitasManggaKg, ukuran, pestisida, kadarAir, perlakuan, produktivitas), manggaID (id manggaID)
+	// data yg dibikin : tanggalPanen
 
 	manggaAsBytes, err := ctx.GetStub().GetState(manggaID)
 
@@ -380,9 +378,9 @@ func (s *ManggaContract) PanenMangga(ctx contractapi.TransactionContextInterface
 
 	// insert TanggalPanen
 	mangga.TanggalPanen = time.Now().Unix()
-	mangga.CreatedAt = time.Now().Unix()
+	// mangga.CreatedAt = time.Now().Unix()
 
-	// data dari fe yaitu : kuantitas mangga, ukuran, pestisida, kadar air, perlakuan, produktivitas
+	// data dari fe yaitu : kuantitasManggaKg, ukuran, pestisida, kadarAir, perlakuan, produktivitas
 	err = json.Unmarshal([]byte(manggaData), &mangga)
 
 	if err != nil {
@@ -399,7 +397,7 @@ func (s *ManggaContract) PanenMangga(ctx contractapi.TransactionContextInterface
 }
 
 // tahap 6 = proses transaksi antara petani dan pengumpul (petani) 
-// adding unique value from petani and txid2
+// adding unique value from petani and txID2
 // fungsi invoke
 func (s *ManggaContract) CreateTrxManggaByPetani(ctx contractapi.TransactionContextInterface, manggaData, prevID string) (string, error) {
 
@@ -411,8 +409,8 @@ func (s *ManggaContract) CreateTrxManggaByPetani(ctx contractapi.TransactionCont
 		return "", fmt.Errorf("Please pass the correct mangga aset id")
 	}
 
-	// data yang dibawa : manggadata (data dari fe : nama pengirim, nama penerima, kuantitas mangga, harga mangga (kg), cara pembayaran), prevID (ID dari blockchain sebelumnya)
-	// data yang dikirim : tanggal transaksi, ID, TxId2, isAssetv= false
+	// data yang dibawa : manggadata (NamaPengirim, NamaPenerima, KuantitasManggaKg, HargaManggaPerKg, CaraPembayaran), prevID (ID manggaID)
+	// data yang dikirim : TanggalTransaksi, id, txID2, isAsset= false
 
 	manggaPrev, err := s.GetManggaByID(ctx, prevID) 
 
@@ -422,7 +420,7 @@ func (s *ManggaContract) CreateTrxManggaByPetani(ctx contractapi.TransactionCont
 
 	manggaNew := new(Mangga)
 
-	manggaNew.CreatedAt = time.Now().Unix()
+	// manggaNew.CreatedAt = time.Now().Unix()
 	manggaNew.TanggalTransaksi = time.Now().Unix()
 
 	// Set ID (key)
@@ -456,9 +454,9 @@ func (s *ManggaContract) CreateTrxManggaByPetani(ctx contractapi.TransactionCont
 	manggaNew.Perlakuan = manggaPrev.Perlakuan
 	manggaNew.Produktivitas = manggaPrev.Produktivitas
 	manggaNew.TanggalPanen = manggaPrev.TanggalPanen
-	manggaNew.KuantitasManggaKg = manggaPrev.KuantitasManggaKg // gak perlu
+	// manggaNew.KuantitasManggaKg = manggaPrev.KuantitasManggaKg // gak perlu
 
-	// data tambahan dari fe : nama pengirim, nama penerima, kuantitas mangga, harga mangga (kg), cara pembayaran
+	// data tambahan dari fe : NamaPengirim, NamaPenerima, KuantitasManggaKg, HargaManggaPerKg, CaraPembayaran
 	err = json.Unmarshal([]byte(manggaData), &manggaNew)
 
 	if err != nil {
@@ -506,8 +504,8 @@ func (s *ManggaContract) CreateTrxManggaByPengumpul(ctx contractapi.TransactionC
 		return "", fmt.Errorf("Please pass the correct mangga aset id")
 	}
 
-	// data yang dibawa : manggaData (data dari fe : nama pengirim, nama penerima, kuantitas mangga, harga mangga (kg), teknik sorting, metode pengemasan, cara pengangkutan, cara pembayaran), prevId (ID dari block sebelumnya)
-	// data yang dikirim : harga mangga total, tanggal transaksi, ID, TxID3
+	// data yang dibawa : manggaData (NamaPengirim, NamaPenerima, KuantitasManggaKg, HargaManggaPerKg, CaraPembayaran, teknikSorting, metodePengemasan, caraPengangkutan), prevId (ID TxID2)
+	// data yang dikirim : harga mangga total, TanggalTransaksi, id, TxID3
 
 	manggaPrev, err := s.GetManggaByID(ctx, prevID) 
 
@@ -517,7 +515,7 @@ func (s *ManggaContract) CreateTrxManggaByPengumpul(ctx contractapi.TransactionC
 
 	manggaNew := new(Mangga)
 
-	manggaNew.CreatedAt = time.Now().Unix()
+	// manggaNew.CreatedAt = time.Now().Unix()
 	manggaNew.TanggalTransaksi = time.Now().Unix()
 
 
@@ -556,7 +554,7 @@ func (s *ManggaContract) CreateTrxManggaByPengumpul(ctx contractapi.TransactionC
 	manggaNew.Produktivitas = manggaPrev.Produktivitas
 	manggaNew.TanggalPanen = manggaPrev.TanggalPanen
 
-	// tambah data dari fe nama pengirim, nama penerima, kuantitas mangga, harga mangga (kg), teknik sorting, metode pengemasan, cara pengangkutan, cara pembayaran
+	// tambah data dari fe NamaPengirim, NamaPenerima, KuantitasManggaKg, HargaManggaPerKg, CaraPembayaran, teknikSorting, metodePengemasan, caraPengangkutan
 	err = json.Unmarshal([]byte(manggaData), &manggaNew)
 
 	if err != nil {
@@ -604,8 +602,8 @@ func (s *ManggaContract) CreateTrxManggaByPedagang(ctx contractapi.TransactionCo
 		return "", fmt.Errorf("Please pass the correct mangga aset id")
 	}
 
-	// data yang dibawa : manggaData (data dari fe : nama pengirim,  nama pembeli, kuantitas mangga, harga mangga (kg), teknik sorting, metode pengemasan, cara pengangkutan, cara pembayaran), prevId (data dari block sebelumnya)
-	// data yang dikirim : harga mangga total, tanggal transaksi, ID, ;TxID4, isConfirmed = true
+	// data yang dibawa : manggaData (NamaPengirim, NamaPenerima, KuantitasManggaKg, HargaManggaPerKg, CaraPembayaran, teknikSorting, metodePengemasan, caraPengangkutan, pembeli), prevId (id TxID3)
+	// data yang dikirim : HargaManggaTotal, TanggalTransaksi, id, TxID4, isConfirmed = true
 
 	manggaPrev, err := s.GetManggaByID(ctx, prevID) 
 
@@ -615,7 +613,9 @@ func (s *ManggaContract) CreateTrxManggaByPedagang(ctx contractapi.TransactionCo
 
 	manggaNew := new(Mangga)
 
-	manggaNew.CreatedAt = time.Now().Unix()
+	// manggaNew.CreatedAt = time.Now().Unix()
+	manggaNew.TanggalTransaksi = time.Now().Unix()
+
 
 	// Set id (key)
 	manggaNew.ID = ctx.GetStub().GetTxID()
@@ -657,7 +657,7 @@ func (s *ManggaContract) CreateTrxManggaByPedagang(ctx contractapi.TransactionCo
 	//get pengumpul unique field from mangga aset
 
 
-	// tambah data dari fe nama pengirim,  nama pembeli, kuantitas mangga, harga mangga (kg), teknik sorting, metode pengemasan, cara pengangkutan, cara pembayaran
+	// tambah data dari fe NamaPengirim, NamaPenerima, KuantitasManggaKg, HargaManggaPerKg, CaraPembayaran, teknikSorting, metodePengemasan, caraPengangkutan, pembeli
 	err = json.Unmarshal([]byte(manggaData), &manggaNew)
 
 	if err != nil {
@@ -721,7 +721,7 @@ func (s *ManggaContract) ConfirmTrxByID(ctx contractapi.TransactionContextInterf
 	mangga.IsConfirmed = true
 
 	// Change createdAt
-	mangga.CreatedAt = time.Now().Unix()
+	// mangga.CreatedAt = time.Now().Unix()
 
 	// Set tanggal masuk when pengumpul confirmed the mangga trx
 	if len(mangga.Ukuran) != 0 || len(mangga.Pupuk) != 0 || 
@@ -839,7 +839,7 @@ func (s *ManggaContract) AddManggaKuantitasByID(ctx contractapi.TransactionConte
 }
 
 
-// CreateUser function to create user and insert it on blockchain
+// register dari sisi hyperledger
 func (s *UserContract) CreateUser(ctx contractapi.TransactionContextInterface, userData string) (string, error) {
 
 	if len(userData) == 0 {
@@ -848,7 +848,7 @@ func (s *UserContract) CreateUser(ctx contractapi.TransactionContextInterface, u
 
 	var user User
 
-	user.CreatedAt = time.Now().Unix()
+	// user.CreatedAt = time.Now().Unix()
 
 	//create user ID
 	user.ID = ctx.GetStub().GetTxID()
@@ -887,7 +887,7 @@ func (s *ManggaContract) GetManggaByID(ctx contractapi.TransactionContextInterfa
 		return nil, fmt.Errorf("Failed to read from world state. %s", err.Error())
 	}
 
-	if manggagAsBytes == nil {
+	if manggaAsBytes == nil {
 		return nil, fmt.Errorf("%s does not exist", manggaID)
 	}
 
@@ -1101,13 +1101,13 @@ func (s *ManggaContract) checkUserbyUsername(ctx contractapi.TransactionContextI
 	result := new(Result)
 	json.Unmarshal([]byte(res), &result)
 
-	orgName := result.Result[0].Record.OrgName
+	role := result.Result[0].Record.Role
 
-	if orgName == "Penangkar" || orgName == "Petani" {
-		return result.Result[0].Record.AlamatLahan, nil
-	} else {
-		return result.Result[0].Record.AlamatToko, nil
-	}
+	// if orgName == "Penangkar" || orgName == "Petani" {
+	// 	return result.Result[0].Record.AlamatLahan, nil
+	// } else {
+	// 	return result.Result[0].Record.AlamatToko, nil
+	// }
 
 	return "", nil
 }

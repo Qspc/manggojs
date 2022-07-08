@@ -62,7 +62,7 @@ CC_RUNTIME_LANGUAGE="golang"
 VERSION="3.22"
 SEQUENCE="43"
 CC_SRC_PATH="./artifacts/src/github.com/mangga/go" 
-CC_NAME="Manggach1_cc" ## nama chaincode
+CC_NAME="manggach1_cc" ## nama chaincode
 
 packageChaincode() {
     rm -rf ${CC_NAME}.tar.gz
