@@ -158,7 +158,6 @@ exports.Invoke = async (req, res) => {
         errorData: null,
       };
 
-      // TODO: change to 201
       res.status(201).send(response_payload);
     }
 

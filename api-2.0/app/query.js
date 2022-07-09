@@ -23,16 +23,16 @@ const queryTransaction = async (channelName, chaincodeName, args, fcn, role, use
     let random = Math.floor(Math.random() * 4);
     switch (random) {
       case 0:
-        orgName = 'Penangkar';
+        roleAktor = 'Penangkar';
         break;
       case 1:
-        orgName = 'Petani';
+        roleAktor = 'Petani';
         break;
       case 2:
-        orgName = 'Pengumpul';
+        roleAktor = 'Pengumpul';
         break;
       case 3:
-        orgName = 'Pedagang';
+        roleAktor = 'Pedagang';
         break;
       default:
         break;
@@ -55,7 +55,7 @@ const queryTransaction = async (channelName, chaincodeName, args, fcn, role, use
     let identity = await wallet.get(userName);
     if (!identity) {
       console.log(`An identity for the user ${userName} does not exist in the wallet, so registering user`);
-      await helper.getRegisteredUser(userName, orgName, true);
+      await helper.getRegisteredUser(userName, roleAktor, true);
       identity = await wallet.get(userName);
       console.log('Register first before retrying');
       return;

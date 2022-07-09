@@ -38,19 +38,19 @@ echo "#######    Generating anchor peer update for PedagangMSP  ##########"
 configtxgen -profile BasicChannel -configPath . -outputAnchorPeersUpdate ./PedagangMSPanchors.tx -channelID $CHANNEL_NAME -asOrg PedagangMSP
 
 # Generate channel configuration block channel2
-configtxgen -profile BasicChannel -configPath . -outputCreateChannelTx ./mychannel.tx -channelID $CHANNEL_NAME2
+configtxgen -profile ChannelDua -configPath . -outputCreateChannelTx ./mychannel.tx -channelID $CHANNEL_NAME2
 
 echo "#######    Generating anchor peer update for PenangkarMSP  ##########"
-configtxgen -profile BasicChannel -configPath . -outputAnchorPeersUpdate ./PenangkarMSPanchors.tx -channelID $CHANNEL_NAME2 -asOrg PenangkarMSP
+configtxgen -profile ChannelDua -configPath . -outputAnchorPeersUpdate ./PenangkarMSPanchors.tx -channelID $CHANNEL_NAME2 -asOrg PenangkarMSP
 
 echo "#######    Generating anchor peer update for PetaniMSP  ##########"
-configtxgen -profile BasicChannel -configPath . -outputAnchorPeersUpdate ./PetaniMSPanchors.tx -channelID $CHANNEL_NAME2 -asOrg PetaniMSP
+configtxgen -profile ChannelDua -configPath . -outputAnchorPeersUpdate ./PetaniMSPanchors.tx -channelID $CHANNEL_NAME2 -asOrg PetaniMSP
 
-echo "#######    Generating anchor peer update for PengumpulMSP  ##########"
-configtxgen -profile BasicChannel -configPath . -outputAnchorPeersUpdate ./PengumpulMSPanchors.tx -channelID $CHANNEL_NAME2 -asOrg PengumpulMSP
+# echo "#######    Generating anchor peer update for PengumpulMSP  ##########"
+# configtxgen -profile ChannelDua -configPath . -outputAnchorPeersUpdate ./PengumpulMSPanchors.tx -channelID $CHANNEL_NAME2 -asOrg PengumpulMSP
 
-echo "#######    Generating anchor peer update for PedagangMSP  ##########"
-configtxgen -profile BasicChannel -configPath . -outputAnchorPeersUpdate ./PedagangMSPanchors.tx -channelID $CHANNEL_NAME2 -asOrg PedagangMSP
+# echo "#######    Generating anchor peer update for PedagangMSP  ##########"
+# configtxgen -profile ChannelDua -configPath . -outputAnchorPeersUpdate ./PedagangMSPanchors.tx -channelID $CHANNEL_NAME2 -asOrg PedagangMSP
 
 
 # # Generate channel configuration block channel1

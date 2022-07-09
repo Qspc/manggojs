@@ -280,6 +280,16 @@ Profiles:
         - *Pedagang
       Capabilities:
         <<: *ApplicationCapabilities
+  ChannelDua:
+    Consortium: SampleConsortium
+    <<: *ChannelDefaults
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *Penangkar
+        - *Petani
+      Capabilities:
+        <<: *ApplicationCapabilities
   OrdererGenesis:
     <<: *ChannelDefaults
     Capabilities:

@@ -9,7 +9,6 @@ export FABRIC_CFG_PATH=${PWD}/artifacts/channel/config/
 
 export CHANNEL_NAME=channel1 ## nama channel
 
-## semua model + ordered
 setGlobalsForOrderer() {
     export CORE_PEER_LOCALMSPID="Orderer"
     export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/artifacts/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
@@ -330,6 +329,6 @@ commitChaincodeDefination
 queryCommitted
 chaincodeInvokeInit
 # sleep 5
-# chaincodeInvoke -> why comment?
+# chaincodeInvoke
 # sleep 3
-# chaincodeQuery -> why comment?
+# chaincodeQuery

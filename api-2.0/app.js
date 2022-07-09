@@ -1,26 +1,36 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const helper = require('../app/helper');
 const user = require('./model/user');
 
+const mongoose = require('mongoose');
 require('dotenv').config();
+const database = 'mongodb://localhost:27017/';
 
 const app = express();
 let refreshTokens = [];
-
-// sambungan ke database
-const db = require('./model/index');
 const { json } = require('express/lib/response');
-// const database = process.env.MONGO_URI || "mongodb://localhost:27017/mangojs"
-const port = process.env.PORT || 5050;
 
 // pengecekan berjalan di port . . .
+const port = process.env.PORT || 5050;
 app.listen(port, function () {
   console.log('server berjalan  di port ' + port);
+});
+
+//connection mongoose local
+mongoose
+  .connect(database, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log('connect mongoDB'))
+  .catch((err) => console.log(err));
+
+mongoose.connection.on('connected', () => {
+  console.log(`${database} terkoneksi. . .`);
 });
 
 app.use(cors());
@@ -86,25 +96,25 @@ app.post('/api/login', async (req, res) => {
   // fungsi buat loginnnya --> helper
   let data = await helper.loginUserMongo(req, res);
 
-  const id = { id: data._id };
-  if (await bcrypt.compare(password, data.password)) {
-    const accessToken = generateAccessToken(id);
-    const refreshToken = jwt.sign(id, process.env.REFRESH_TOKEN_SECRET);
-    // refreshToken.push(refreshTokens)
-  } else {
-    return res.status(404).json({ status: 'error', error: 'invalid password' });
-  }
-
-  // const refreshToken = accessToken;
-
   // wallet input. login ke sistem blockchain --> helper
   let isUserRegistered = await helper.isUserRegistered(userName, data.role);
 
+  // const refreshToken = accessToken;
+
   if (isUserRegistered) {
-    res.status(200).json({ status: 'selamat datang ' + data.userName + ' dengan role ' + data.role, Token: accessToken, refresh: refreshToken });
+    const id = { id: data._id };
+    if (await bcrypt.compare(password, data.password)) {
+      const accessToken = generateAccessToken(id);
+      const refreshToken = jwt.sign(id, process.env.REFRESH_TOKEN_SECRET);
+
+      res.status(200).json({ status: 'selamat datang ' + data.userName + ' dengan role ' + data.role, Token: accessToken, refresh: refreshToken });
+      // refreshToken.push(refreshTokens)
+    } else {
+      return res.status(404).json({ status: 'error', error: 'invalid password' });
+    }
   } else {
     res.status(404).json({
-      message: `User ${username} with role ${orgName}, Please register first.`,
+      message: `User not found, Please register first.`,
     });
   }
 });

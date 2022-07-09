@@ -3,8 +3,8 @@ export CORE_PEER_TLS_ENABLED=true
 export ORDERER_CA=${PWD}/artifacts/channel2/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
 export PEER0_PENANGKAR_CA=${PWD}/artifacts/channel2/crypto-config/peerOrganizations/penangkar.example.com/peers/peer0.penangkar.example.com/tls/ca.crt
 export PEER0_PETANI_CA=${PWD}/artifacts/channel2/crypto-config/peerOrganizations/petani.example.com/peers/peer0.petani.example.com/tls/ca.crt
-export PEER0_PENGUMPUL_CA=${PWD}/artifacts/channel2/crypto-config/peerOrganizations/pengumpul.example.com/peers/peer0.pengumpul.example.com/tls/ca.crt
-export PEER0_PEDAGANG_CA=${PWD}/artifacts/channel2/crypto-config/peerOrganizations/pedagang.example.com/peers/peer0.pedagang.example.com/tls/ca.crt
+# export PEER0_PENGUMPUL_CA=${PWD}/artifacts/channel2/crypto-config/peerOrganizations/pengumpul.example.com/peers/peer0.pengumpul.example.com/tls/ca.crt
+# export PEER0_PEDAGANG_CA=${PWD}/artifacts/channel2/crypto-config/peerOrganizations/pedagang.example.com/peers/peer0.pedagang.example.com/tls/ca.crt
 export FABRIC_CFG_PATH=${PWD}/artifacts/channel2/config/
 
 export CHANNEL_NAME=channel2 ## nama channel
@@ -32,25 +32,25 @@ setGlobalsForPeer0Petani() {
 
 }
 
-setGlobalsForPeer0Pengumpul(){
-    export CORE_PEER_LOCALMSPID="Pengumpul"
-    export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_PENGUMPUL_CA
-    export CORE_PEER_MSPCONFIGPATH=${PWD}/artifacts/channel2/crypto-config/peerOrganizations/pengumpul.example.com/users/Admin@pengumpul.example.com/msp
-    export CORE_PEER_ADDRESS=localhost:10051
+# setGlobalsForPeer0Pengumpul(){
+#     export CORE_PEER_LOCALMSPID="Pengumpul"
+#     export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_PENGUMPUL_CA
+#     export CORE_PEER_MSPCONFIGPATH=${PWD}/artifacts/channel2/crypto-config/peerOrganizations/pengumpul.example.com/users/Admin@pengumpul.example.com/msp
+#     export CORE_PEER_ADDRESS=localhost:10051
     
-}
+# }
 
-setGlobalsForPeer0Pedagang(){
-    export CORE_PEER_LOCALMSPID="Pedagang"
-    export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_PEDAGANG_CA
-    export CORE_PEER_MSPCONFIGPATH=${PWD}/artifacts/channel2/crypto-config/peerOrganizations/pedagang.example.com/users/Admin@pedagang.example.com/msp
-    export CORE_PEER_ADDRESS=localhost:11051
+# setGlobalsForPeer0Pedagang(){
+#     export CORE_PEER_LOCALMSPID="Pedagang"
+#     export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_PEDAGANG_CA
+#     export CORE_PEER_MSPCONFIGPATH=${PWD}/artifacts/channel2/crypto-config/peerOrganizations/pedagang.example.com/users/Admin@pedagang.example.com/msp
+#     export CORE_PEER_ADDRESS=localhost:11051
     
-}
+# }
 
 presetup() {
     echo Vendoring Go dependencies ...
-    pushd ./artifacts/src/github.com/mangga2/go # ieu kudu diubah heula
+    pushd ./artifacts/src/github.com/mango/go
     GO111MODULE=on go mod vendor
     popd
     echo Finished vendoring Go dependencies
@@ -61,7 +61,7 @@ CHANNEL_NAME="channel2"
 CC_RUNTIME_LANGUAGE="golang"
 VERSION="3.22"
 SEQUENCE="43"
-CC_SRC_PATH="./artifacts/src/github.com/mangga2/go" # ieu kudu diubah heula
+CC_SRC_PATH="./artifacts/src/github.com/mango/go"
 CC_NAME="manggach2_cc" ## nama chaincode
 
 packageChaincode() {
@@ -225,8 +225,8 @@ commitChaincodeDefination() {
         --channelID $CHANNEL_NAME --name ${CC_NAME} \
         --peerAddresses localhost:7051 --tlsRootCertFiles $PEER0_PENANGKAR_CA \
         --peerAddresses localhost:8051 --tlsRootCertFiles $PEER0_PETANI_CA \
-        --peerAddresses localhost:10051 --tlsRootCertFiles $PEER0_PENGUMPUL_CA \
-        --peerAddresses localhost:11051 --tlsRootCertFiles $PEER0_PEDAGANG_CA \
+        # --peerAddresses localhost:10051 --tlsRootCertFiles $PEER0_PENGUMPUL_CA \
+        # --peerAddresses localhost:11051 --tlsRootCertFiles $PEER0_PEDAGANG_CA \
         --version ${VERSION} --sequence ${SEQUENCE} --init-required
 
 }
@@ -244,13 +244,13 @@ queryCommitted() {
 chaincodeInvokeInit() {
     setGlobalsForPeer0Penangkar
     peer chaincode invoke -o localhost:7050 \
-        --ordererTLSHostnameOverride orderer.example.com \
+        --ordererTLSHostnameOverride orderer2.example.com \
         --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA \
         -C $CHANNEL_NAME -n ${CC_NAME} \
         --peerAddresses localhost:7051 --tlsRootCertFiles $PEER0_PENANGKAR_CA \
         --peerAddresses localhost:8051 --tlsRootCertFiles $PEER0_PETANI_CA \
-        --peerAddresses localhost:10051 --tlsRootCertFiles $PEER0_PENGUMPUL_CA \
-        --peerAddresses localhost:11051 --tlsRootCertFiles $PEER0_PEDAGANG_CA \
+        # --peerAddresses localhost:10051 --tlsRootCertFiles $PEER0_PENGUMPUL_CA \
+        # --peerAddresses localhost:11051 --tlsRootCertFiles $PEER0_PEDAGANG_CA \
         --isInit -c '{"Args":[]}'
 
 }
@@ -320,10 +320,10 @@ approveForMyPenangkar
 checkCommitReadynessPenangkar
 approveForMyPetani
 checkCommitReadynessPetani
-approveForMyPengumpul
-checkCommitReadynessPengumpul
-approveForMyPedagang
-checkCommitReadynessPedagang
+# approveForMyPengumpul
+# checkCommitReadynessPengumpul
+# approveForMyPedagang
+# checkCommitReadynessPedagang
 
 commitChaincodeDefination
 queryCommitted

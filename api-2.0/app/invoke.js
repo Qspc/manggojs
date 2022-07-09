@@ -132,6 +132,11 @@ const invokeTransaction = async (channelName, chaincodeName, fcn, args, userName
         console.log(result.toString());
         result = { txid: result.toString() };
         break;
+      case 'CreateUser':
+        result = await contract.submitTransaction('UserContract:' + fcn, args[0]);
+        console.log(result.toString());
+        result = { txid: result.toString() };
+        break;
 
       default:
         break;
