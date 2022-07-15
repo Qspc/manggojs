@@ -260,7 +260,7 @@ chaincodeInvoke() {
     setGlobalsForPeer0Penangkar
 
     # Registrasi Benih
-    peer chaincode query -o localhost:7050 \
+    peer chaincode invoke -o localhost:7050 \
         --ordererTLSHostnameOverride orderer.example.com \
         --tls $CORE_PEER_TLS_ENABLED \
         --cafile $ORDERER_CA \
@@ -269,8 +269,9 @@ chaincodeInvoke() {
         --peerAddresses localhost:8051 --tlsRootCertFiles $PEER0_PETANI_CA \
         --peerAddresses localhost:10051 --tlsRootCertFiles $PEER0_PENGUMPUL_CA \
         --peerAddresses localhost:11051 --tlsRootCertFiles $PEER0_PEDAGANG_CA \
-        -c '{"function": "GetManggaByID","Args":[
-        "301cd42d4c0ec628f24a59fd2ccc154ed4fa0740d80e3d698950037d4020b2a7"
+        -c '{"function": "CreateTrxManggaByPengumpul","Args":[
+        "{\"namaPengirim\":\"adang\",\"namaPenerima\":\"omen\",\"kuantitasManggaKg\": 50,\"hargaManggaPerKg\":50000,\"teknikSorting\":\"quick sort\",\"metodePengemasan\":\"karung goni\",\"pengangkutan\":\"peti kemas\",\"caraPembayaran\":\"gopay\"}", 
+        "aba00af4fba73ddb8ada7ac0ef2fec0cc3200ca91f68428eeac9725e38c7d357"
     ]}'
 
 }
@@ -278,21 +279,19 @@ chaincodeInvoke() {
 # chaincodeInvoke
 
 chaincodeQuery() {
-    setGlobalsForPeer0Petani
+    setGlobalsForPeer0Penangkar
 
-    # Query all cars
-    # peer chaincode query -C $CHANNEL_NAME -n ${CC_NAME} -c '{"Args":["queryAllCars"]}'
-
-    # Query Car by Id
-    peer chaincode query -C $CHANNEL_NAME -n ${CC_NAME} -c '{"function": "queryCar","Args":["CAR0"]}'
-    #'{"Args":["GetSampleData","Key1"]}'
-
-    # Query Private Car by Id
-    # peer chaincode query -C $CHANNEL_NAME -n ${CC_NAME} -c '{"function": "readPrivateCar","Args":["1111"]}'
-    # peer chaincode query -C $CHANNEL_NAME -n ${CC_NAME} -c '{"function": "readCarPrivateDetails","Args":["1111"]}'
+    # Registrasi Benih
+    peer chaincode invoke -o localhost:7050 \
+        --ordererTLSHostnameOverride orderer.example.com \
+        --tls $CORE_PEER_TLS_ENABLED \
+        --cafile $ORDERER_CA \
+        -C $CHANNEL_NAME -n ${CC_NAME}  \
+        --peerAddresses localhost:7051 --tlsRootCertFiles $PEER0_PENANGKAR_CA \
+        -c '{"function": "GetHistoryForAssetByID","Args":["fa87ab87edf697acf4d5997373b60f866402695bf0aec0e76cde03c663c99193"]}'
 }
 
-# chaincodeQuery
+chaincodeQuery
 
 # Run this function if you add any new dependency in chaincode
 # presetup
@@ -316,6 +315,6 @@ chaincodeQuery() {
 
 
 # sleep 5
-chaincodeInvoke
+# chaincodeInvoke
 # sleep 3
 # chaincodeQuery

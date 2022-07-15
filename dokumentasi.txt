@@ -118,7 +118,7 @@ body : {
     "chaincodeName": "manggach1_cc",
     "channelName": "channel1",
     "args": [
-        "{\"pupuk\":\"kompos\",\"lokasiLahan\":\"cikabayan\"}", 
+        "{\"pupuk\":\"kompos\",\"lokasiLahan\":\"cikabayan\",\"kuantitasBenihKg\":10}", 
         "id dari confirm TxID1"
     ]
 }
