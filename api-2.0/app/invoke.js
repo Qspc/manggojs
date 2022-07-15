@@ -22,9 +22,14 @@ const invokeTransaction = async (channelName, chaincodeName, fcn, args, userName
     } else if (role == 4) {
       roleAktor = 'Pedagang';
     }
+    logger.debug('role is  : ' + roleAktor);
+    logger.debug('username is  : ' + userName);
+
+
 
     //identifikasi role
     const ccp = await helper.getCCP(roleAktor);
+    // console.log(ccp.peers);
     // mengambil jalur path
     const walletPath = await helper.getWalletPath(roleAktor);
     // menegecek role di fabric
@@ -41,39 +46,51 @@ const invokeTransaction = async (channelName, chaincodeName, fcn, args, userName
       return;
     }
 
+    // console.log(ccp)
+    // console.log(wallet)
+
+
     //if (orgName != "")
 
     const connectOptions = {
       wallet,
       identity: userName,
-      discovery: { enabled: true, asLocalhost: true },
-      eventHandlerOptions: EventStrategies.NONE,
+      discovery: { enabled: false, asLocalhost: true },
+      // eventHandlerOptions: EventStrategies.NONE,
     };
 
     // gateaway = koneksi untuk mengambil jalur jaringan fabric
     const gateway = new Gateway();
     await gateway.connect(ccp, connectOptions);
+    // console.log('cek eror 1')
 
+
+    // console.log(channelName)
+    // console.log(chaincodeName)
     //ambil nama channel
     const network = await gateway.getNetwork(channelName);
     //ambil nama chaincode
     const contract = network.getContract(chaincodeName);
+    // console.log(contract)
 
     // await contract.addContractListener(contractListener);
     // await network.addBlockListener(blockListener);
+    // console.log('cek eror 2')
+
 
     // Multiple smartcontract in one chaincode
     let result;
     let message;
+    // console.log('fcn')
+    // console.log(args[0])
 
     // identifikasi fungsi/perintah apa yang digunakan
     switch (fcn) {
       case 'RegistrasiBenih':
-        // fungsi/perintah dijalankan ----> mangga.go
-        result = await contract.submitTransaction('ManggaContract:' + fcn, args[0]); // informasi benih
+        // result = 'berhasil'
+        result = await contract.submitTransaction('ManggaContract:'+fcn, args[0]);
         console.log(result.toString());
-        // output dari hasil fungsi/perintah ---> return
-        result = { txid: result.toString() };
+        result = {txid: result.toString()}
         break;
       case 'TanamBenih':
         result = await contract.submitTransaction('ManggaContract:' + fcn, args[0], args[1]); //info mangga, data dari block sebelumnya
@@ -141,6 +158,9 @@ const invokeTransaction = async (channelName, chaincodeName, fcn, args, userName
       default:
         break;
     }
+
+    console.log('cek eror 3')
+
 
     // let result
     // let message;

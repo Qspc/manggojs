@@ -1,0 +1,356 @@
+Manggo JS
+
+- Pengertian 
+aplikasi rantai pasok buah mangga yang menggunakan teknologi blockchain
+
+- atribut 
+1. autentikasi
+Id, userName, password, email, namaLengkap, noTelp, tglLahir, nik, role, alamat  
+
+2. blockchain
+
+- channel
+1. channel pertama : channel1
+alur proses = penangkar -> petani -> pengumpul -> pedagang besar -> konsumen
+2. channel kedua : channel2
+alur proses : penangkar -> petani -> pengumpul -> pedagang kecil -> konsumen
+
+# PENANGKAR
+
+1. fungsi mendaftarkan aset benih
+method : POST
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc
+body : {
+    "fcn": "RegistrasiBenih",
+    "peers": [
+        "peer0.penangkar.example.com",
+        "peer0.petani.example.com",
+        "peer0.pengumpul.example.com",
+        "peer0.pedagang.example.com"
+    ],
+    "chaincodeName": "manggach1_cc",
+    "channelName": "channel1",
+    "args": [
+        "{\"varietasBenih\":\"simanalagi\",\"umurBenih\":\"7 hari\",\"kuantitasBenihKg\": 10}"
+    ]
+}
+
+2. menambah kuantitas benih
+method : POST
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc
+body : {
+    "fcn": "AddKuantitasBenihByID",
+    "peers": [
+        "peer0.penangkar.example.com",
+        "peer0.petani.example.com",
+        "peer0.pengumpul.example.com",
+        "peer0.pedagang.example.com"
+    ],
+    "chaincodeName": "manggach1_cc",
+    "channelName": "channel1",
+    "args": [
+        "20", 
+        "benihID"
+    ]
+}
+
+3. fungsi membuat transaksi penangkar ke petani
+method : POST
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc
+body : {
+    "fcn": "CreateTrxManggaByPenangkar",
+    "peers": [
+        "peer0.penangkar.example.com",
+        "peer0.petani.example.com",
+        "peer0.pengumpul.example.com",
+        "peer0.pedagang.example.com"
+    ],
+    "chaincodeName": "manggach1_cc",
+    "channelName": "channel1",
+    "args": [
+        "{\"namaPengirim\":\"kahar\",\"namaPenerima\":\"toni\",\"kuantitasBenihKg\": 10.5,\"hargaBenihPerKg\":10000.00,\"caraPembayaran\":\"tunai\"}", 
+        "benihID"
+    ]
+}
+
+4. daftar benih asset yang telah dibuat dan siap dijual
+method : GET
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc/?peer=peer0.penangkar.example.com&fcn=GetManggaForQuery&args=["{\"selector\":{\"namaPengirim\":\"koharPenangkar\", \"isAsset\":true}}"]
+peer : peer0.penangkar.example.com
+fcn  : GetManggaForQuery
+argn : ["{\"selector\":{\"namaPengirim\":\"koharPenangkar\", \"isAsset\":true}}"]
+
+5. transaksi keluar (daftar transaksi yg dikirim ke petani)
+method : GET
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc/?peer=peer0.penangkar.example.com&fcn=GetManggaForQuery&args=["{\"selector\":{\"namaPengirim\":\"koharPenangkar\", \"isConfirmed\":false}}"]
+peer : peer0.penangkar.example.com
+fcn  : GetManggaForQuery
+argn : ["{\"selector\":{\"namaPengirim\":\"koharPenangkar\", \"isConfirmed\":false}}"]
+
+
+# PETANI
+
+1. Transaksi masuk (daftar transaksi yg masuk dan belum di accept)
+method : GET
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc/?peer=peer0.penangkar.example.com&fcn=GetManggaForQuery&args=["{\"selector\":{\"namaPenerima\":\"beniPetani\", \"isConfirmed\":false}}"]
+peer : peer0.penangkar.example.com
+fcn  : GetManggaForQuery
+argn : ["{\"selector\":{\"namaPenerima\":\"beniPetani\", \"isConfirmed\":false}}"]
+
+2. daftar benih yang siap untuk dipakai/ditanam
+method : GET
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc/?peer=peer0.penangkar.example.com&fcn=GetManggaForQuery&args=["{\"selector\":{\"namaPenerima\":\"beniPetani\", \"isConfirmed\":true}}"]
+peer : peer0.penangkar.example.com
+fcn  : GetManggaForQuery
+argn : ["{\"selector\":{\"namaPenerima\":\"beniPetani\", \"isConfirmed\":true}}"]
+
+3. fungsi untuk tanam benih
+method : POST
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc
+body : {
+    "fcn": "TanamBenih",
+    "peers": [
+        "peer0.penangkar.example.com",
+        "peer0.petani.example.com",
+        "peer0.pengumpul.example.com",
+        "peer0.pedagang.example.com"
+    ],
+    "chaincodeName": "manggach1_cc",
+    "channelName": "channel1",
+    "args": [
+        "{\"pupuk\":\"kompos\",\"lokasiLahan\":\"cikabayan\"}", 
+        "id dari confirm TxID1"
+    ]
+}
+
+4. fungsi untuk panen mangga
+method : POST
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc
+body : {
+    "fcn": "PanenMangga",
+    "peers": [
+        "peer0.penangkar.example.com",
+        "peer0.petani.example.com",
+        "peer0.pengumpul.example.com",
+        "peer0.pedagang.example.com"
+    ],
+    "chaincodeName": "manggach1_cc",
+    "channelName": "channel1",
+    "args": [
+        "{\"ukuran\":\"lonjong\",\"pestisida\":\"abcd\",\"kadarAir\":\"sedang\",\"perlakuan\":\"baik\",\"produktivitas\":\"subur\",\"kuantitasManggaKg\": 100}",
+        "id manggaID"
+    ]
+}
+
+5. fungsi transaksi petani dan pengumpul
+method : POST
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc
+body : {
+    "fcn": "CreateTrxManggaByPetani",
+    "peers": [
+        "peer0.penangkar.example.com",
+        "peer0.petani.example.com",
+        "peer0.pengumpul.example.com",
+        "peer0.pedagang.example.com"
+    ],
+    "chaincodeName": "manggach1_cc",
+    "channelName": "channel1",
+    "args": [
+        "{\"namaPengirim\":\"beniPetani\",\"namaPenerima\":\"adulPengumpul\",\"kuantitasManggaKg\": 100,\"hargaManggaPerKg\":30000,\"caraPembayaran\":\"tunai\"}", 
+        "id manggaID"
+    ]
+}
+
+6. daftar manggaID yang sudah dibuat (aset mangga tersedia)
+method : GET 
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc/?peer=peer0.petani.example.com&fcn=GetManggaForQuery&args=["{\"selector\":{\"namaPengirim\":\"beniPetani\", \"isAsset\":true}}"]
+peer : peer0.petani.example.com
+fcn  : GetManggaForQuery
+argn : ["{\"selector\":{\"namaPengirim\":\"beniPetani\", \"isAsset\":true}}"]
+
+7. transaksi keluar (daftar transaksi yg dikirim ke pengumpul)
+method : GET
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc/?peer=peer0.petani.example.com&fcn=GetManggaForQuery&args=["{\"selector\":{\"namaPengirim\":\"beniPetani\", \"isConfirmed\":false}}"]
+peer : peer0.petani.example.com
+fcn  : GetManggaForQuery
+argn : ["{\"selector\":{\"namaPengirim\":\"beniPetani\", \"isConfirmed\":false}}"]
+
+# PENGUMPUL 
+
+1. transaksi masuk (daftar transaksi yg masuk dari petani dan belum di accept)
+method : GET
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc/?peer=peer0.petani.example.com&fcn=GetManggaForQuery&args=["{\"selector\":{\"namaPenerima\":\"adulPengumpul\", \"isConfirmed\":false}}"]
+peer : peer0.petani.example.com
+fcn  : GetManggaForQuery
+argn : ["{\"selector\":{\"namaPenerima\":\"adulPengumpul\", \"isConfirmed\":false}}"]
+
+2. daftar mangga yg siap di transaksikan
+method : GET
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc/?peer=peer0.petani.example.com&fcn=GetManggaForQuery&args=["{\"selector\":{\"namaPenerima\":\"adulPengumpul\", \"isConfirmed\":true}}"]
+peer : peer0.petani.example.com
+fcn  : GetManggaForQuery
+argn : ["{\"selector\":{\"namaPenerima\":\"adulPengumpul\", \"isConfirmed\":true}}"]
+
+3. fungsi transaksi pengumpul dan pedagang
+method : POST
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc
+body : {
+    "fcn": "CreateTrxManggaByPengumpul",
+    "peers": [
+        "peer0.penangkar.example.com",
+        "peer0.petani.example.com",
+        "peer0.pengumpul.example.com",
+        "peer0.pedagang.example.com"
+    ],
+    "chaincodeName": "manggach1_cc",
+    "channelName": "channel1",
+    "args": [
+        "{\"namaPengirim\":\"adulPengumpul\",\"namaPenerima\":\"dadangPedagang\",\"kuantitasManggaKg\": 100,\"hargaManggaPerKg\":40000,\"teknikSorting\":\"bubble sort\",\"metodePengemasan\":\"karung beras\",\"pengangkutan\":\"peti kemas\",\"caraPembayaran\":\"tunai\"}", 
+        "id TxID2"
+    ]
+}
+
+4. transaksi keluar (daftar transaksi yg dikirim ke pedagang)
+method : GET
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc/?peer=peer0.pengumpul.example.com&fcn=GetManggaForQuery&args=["{\"selector\":{\"namaPengirim\":\"adulPengumpul\", \"isConfirmed\":false}}"]
+peer : peer0.pengumpul.example.com
+fcn  : GetManggaForQuery
+argn : ["{\"selector\":{\"namaPengirim\":\"adulPengumpul\", \"isConfirmed\":false}}"]
+
+# PEDAGANG 
+
+1. transaksi masuk (daftar transaksi yg masuk dari pengumpul dan belum di accept)
+method : GET
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc/?peer=peer0.pengumpul.example.com&fcn=GetManggaForQuery&args=["{\"selector\":{\"namaPenerima\":\"adulPengumpul\", \"isConfirmed\":false}}"]
+peer : peer0.pengumpul.example.com
+fcn  : GetManggaForQuery
+argn : ["{\"selector\":{\"namaPenerima\":\"adulPengumpul\", \"isConfirmed\":false}}"]
+
+2. daftar mangga yg siap dijual
+method : GET
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc/?peer=peer0.pengumpul.example.com&fcn=GetManggaForQuery&args=["{\"selector\":{\"namaPenerima\":\"adulPengumpul\", \"isConfirmed\":true}}"]
+peer : peer0.pengumpul.example.com
+fcn  : GetManggaForQuery
+argn : ["{\"selector\":{\"namaPenerima\":\"adulPengumpul\", \"isConfirmed\":true}}"]
+
+3. fungsi transaksi pedagang dan konsumsi
+method : POST
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc
+body : {
+    "fcn": "CreateTrxManggaByPedagang",
+    "peers": [
+        "peer0.penangkar.example.com",
+        "peer0.petani.example.com",
+        "peer0.pengumpul.example.com",
+        "peer0.pedagang.example.com"
+    ],
+    "chaincodeName": "manggach1_cc",
+    "channelName": "channel1",
+    "args": [
+        "{\"namaPengirim\":\"dadangPedagang\",\"namaPenerima\":\"omenKonsumen\",\"kuantitasManggaKg\": 100,\"hargaManggaPerKg\":50000,\"caraPembayaran\":\"tunai\",\"pembeli\":\"pavan\"}", 
+        "id TxID3"
+    ]
+}
+
+4. daftar transaksi yg dikirim ke konsumen
+method : GET
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc/?peer=peer0.pengumpul.example.com&fcn=GetManggaForQuery&args=["{\"selector\":{\"namaPengirim\":\"dadangPedagang\", \"isConfirmed\":true}}"]
+peer : peer0.pedagang.example.com
+fcn  : GetManggaForQuery
+argn : ["{\"selector\":{\"namaPengirim\":\"dadangPedagang\", \"isConfirmed\":true}}"]
+
+
+# bonus
+
+1. mendaftarkan akun
+method : POST
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc
+body : {
+    "fcn": "CreateUser",
+    "peers": [
+        "peer0.penangkar.example.com",
+        "peer0.petani.example.com",
+        "peer0.pengumpul.example.com",
+        "peer0.pedagang.example.com"
+    ],
+    "chaincodeName": "manggach1_cc",
+    "channelName": "channel1",
+    "args": [
+        "{\"noHP\":\"081562621717\",\"email\":\"ggg@gmail.com\",\"namaLengkap\": \"dadangPedagang\",\"username\":\"dadang123\",\"password\":\"password\",\"tanggalLahir\":\"1 januari 1999\",\"nik\":1111222233334444,\"role\":2,\"alamat\":\"bogor\"}", 
+    ]
+}
+
+2. konfirmasi transaksi (petani, pengumpul, pedagang)
+method : POST
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc
+body : {
+    "fcn": "ConfirmTrxByID",
+    "peers": [
+        "peer0.penangkar.example.com",
+        "peer0.petani.example.com",
+        "peer0.pengumpul.example.com",
+        "peer0.pedagang.example.com"
+    ],
+    "chaincodeName": "manggach1_cc",
+    "channelName": "channel1",
+    "args": [
+        "ID TxID bersangkutan"
+    ]
+}
+
+3. tolak transaksi (petani, pengumpul, pedagang)
+method : POST
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc
+body : {
+    "fcn": "RejectTrxByID",
+    "peers": [
+        "peer0.penangkar.example.com",
+        "peer0.petani.example.com",
+        "peer0.pengumpul.example.com",
+        "peer0.pedagang.example.com"
+    ],
+    "chaincodeName": "manggach1_cc",
+    "channelName": "channel1",
+    "args": [
+        "ID benih yg dikembalikan",
+        "ID TxID yg",
+        "10",
+        "kuantitas tidak sesuai"
+    ]
+}
+
+
+# autentikasi
+
+1. register
+method : POST
+link : http://localhost:4000/api/registrasi/
+body : {
+    "userName": "user1",
+    "password": "password",
+    "email" : "user1@yopmail.com",
+    "namaLengkap" : "user penangkar",
+    "noTelp" : "082208220822",
+    "tglLahir" : "23 februari 1980",
+    "nik" : "1234123412341234",
+    "role" : "1",
+    "alamat" : "bogor"
+}
+
+2. login
+method : POST
+link : http://localhost:4000/api/login/
+body : {
+    "userName": "user1",
+    "password": "password",
+}
+
+3. get all data
+method : GET
+link : http://localhost:4000/api/all/
+body : -
+
+4. get all data
+method : GET
+link : http://localhost:4000/api/profile/${userName}
+body : -

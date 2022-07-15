@@ -113,12 +113,16 @@ exports.Invoke = async (req, res) => {
     var channelName = req.params.channelName;
     var fcn = req.body.fcn;
     var args = req.body.args;
+    var username = req.body.username
+    var role = req.body.role
     var transient = req.body.transient;
     console.log(`Transient data is ;${transient}`);
     logger.debug('channelName  : ' + channelName);
     logger.debug('chaincodeName : ' + chaincodeName);
     logger.debug('fcn  : ' + fcn);
     logger.debug('args  : ' + args);
+    logger.debug('username  : ' + username);
+
 
     if (!chaincodeName) {
       res.json(getErrorMessage("'chaincodeName'"));
@@ -137,12 +141,12 @@ exports.Invoke = async (req, res) => {
       return;
     }
 
-    // masuk ek fungsi post transaksi ---> invoke
-    let message = await invoke.invokeTransaction(channelName, chaincodeName, fcn, args, req.userName, req.role, transient);
-    console.log(`message result is :`);
+    // masuk ke fungsi post transaksi ---> invoke
+    let message = await invoke.invokeTransaction(channelName, chaincodeName, fcn, args, username, role, transient);
 
+    console.log(`message result is :`);
     console.log(message);
-    //console.log(`${typeof message}`)
+    // console.log(`${typeof message}`)
 
     if (typeof message == 'string') {
       const response_payload = {

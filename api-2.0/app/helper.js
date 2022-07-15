@@ -4,9 +4,9 @@ var { Gateway, Wallets } = require('fabric-network');
 const path = require('path');
 const FabricCAServices = require('fabric-ca-client');
 const fs = require('fs');
-const User = require('../models/user.model');
+const user = require('../model/user');
 const jwt = require('jsonwebtoken');
-const bcryptjs = require('bcryptjs');
+// const bcryptjs = require('bcryptjs');
 const bcrypt = require('bcrypt');
 
 const util = require('util');
@@ -112,6 +112,9 @@ const getRegisteredUser = async (userName, role, isJson) => {
     await enrollAdmin(roleAktor, ccp);
     adminIdentity = await wallet.get('admin');
     console.log('Admin Enrolled Successfully');
+  }
+  else {
+    console.log('admin error')
   }
 
   // build a user object for authenticating with the CA

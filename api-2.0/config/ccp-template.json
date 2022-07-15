@@ -20,7 +20,7 @@
   },
   "peers": {
     "peer0.${ORG}.example.com": {
-      "url": "grpcs://localhost:${P0PORT}",
+      "url": "grpc://localhost:${P0PORT}",
       "tlsCACerts": {
         "pem": "${PEERPEM}"
       },
@@ -38,7 +38,7 @@
         "pem": "${CAPEM}"
       },
       "httpOptions": {
-        "verify": false
+        "verify": true
       }
     }
   }

@@ -102,7 +102,7 @@
         "path": "/tmp/crypto/peerOrganizations/penangkar.example.com/peers/peer0.penangkar.example.com/tls/ca.crt"
       },
       "url": "grpcs://peer0.penangkar.example.com:7051",
-      "eventUrl": "grpcs://peer0.penangkar.example.com:7053",
+      "eventUrl": "grpc://peer0.penangkar.example.com:7053",
       "grpcOptions": {
         "ssl-target-name-override": "peer0.penangkar.example.com"
       }
@@ -112,7 +112,7 @@
         "path": "/tmp/crypto/peerOrganizations/petani.example.com/peers/peer0.petani.example.com/tls/ca.crt"
       },
       "url": "grpcs://peer0.petani.example.com:8051",
-      "eventUrl": "grpcs://peer0.petani.example.com:8053",
+      "eventUrl": "grpc://peer0.petani.example.com:8053",
       "grpcOptions": {
         "ssl-target-name-override": "peer0.petani.example.com"
       }
@@ -122,7 +122,7 @@
         "path": "/tmp/crypto/peerOrganizations/pengumpul.example.com/peers/peer0.pengumpul.example.com/tls/ca.crt"
       },
       "url": "grpcs://peer0.pengumpul.example.com:10051",
-      "eventUrl": "grpcs://peer0.pengumpul.example.com:10053",
+      "eventUrl": "grpc://peer0.pengumpul.example.com:10053",
       "grpcOptions": {
         "ssl-target-name-override": "peer0.pengumpul.example.com"
       }
@@ -132,7 +132,7 @@
         "path": "/tmp/crypto/peerOrganizations/pedagang.example.com/peers/peer0.pedagang.example.com/tls/ca.crt"
       },
       "url": "grpcs://peer0.pedagang.example.com:11051",
-      "eventUrl": "grpcs://peer0.pedagang.example.com:11053",
+      "eventUrl": "grpc://peer0.pedagang.example.com:11053",
       "grpcOptions": {
         "ssl-target-name-override": "peer0.pedagang.example.com"
       }

@@ -3,19 +3,19 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const helper = require('../app/helper');
+const helper = require('./app/helper');
 const user = require('./model/user');
 
 const mongoose = require('mongoose');
 require('dotenv').config();
-const database = 'mongodb://localhost:27017/';
+const database = 'mongodb://localhost:27017/manggojs';
 
 const app = express();
 let refreshTokens = [];
 const { json } = require('express/lib/response');
 
 // pengecekan berjalan di port . . .
-const port = process.env.PORT || 5050;
+const port = 4000;
 app.listen(port, function () {
   console.log('server berjalan  di port ' + port);
 });
@@ -77,6 +77,8 @@ app.post('/api/registrasi/', async (req, res) => {
 
   // fungsi buat register --> helper
   let response = await helper.registerUserMongo(req, res);
+  // console.log(pesan)
+  // console.log(response)
 
   try {
     console.log('User success !!', response);
@@ -86,7 +88,7 @@ app.post('/api/registrasi/', async (req, res) => {
   }
 
   res.json({ status: 'ok' });
-  res.status(201).json({ message: pesan, data: response });
+  res.status(201).json({ 'message': pesan, 'data': response });
 });
 
 // login

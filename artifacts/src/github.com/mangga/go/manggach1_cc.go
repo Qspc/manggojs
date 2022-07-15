@@ -80,7 +80,7 @@ type Mangga struct {
 	Pengangkutan string `json:"pengangkutan"`
 
 	//pedagang
-	Pembeli		string `json:"pembeli"`
+	// Pembeli		string `json:"pembeli"`
 
 	CaraPembayaran string `json:"caraPembayaran"`
 
@@ -285,7 +285,7 @@ func (s *ManggaContract) TanamBenih(ctx contractapi.TransactionContextInterface,
 		return "", fmt.Errorf("Please pass the correct mangga transaction id")
 	}
 
-	// data yang dibawa : manggaData (pupuk, lokasiLahan), PrevID (ID TxID1)
+	// data yang dibawa : manggaData (pupuk, lokasiLahan, KuantitasBenihKg), PrevID (ID TxID1)
 	// data yang dikirim : tanggalTanam, id, manggaID, isAsset = true 
 
 	//proses unmarshal data blockchain sebelumnya untuk dipakai sekarang
@@ -454,6 +454,8 @@ func (s *ManggaContract) CreateTrxManggaByPetani(ctx contractapi.TransactionCont
 	manggaNew.Perlakuan = manggaPrev.Perlakuan
 	manggaNew.Produktivitas = manggaPrev.Produktivitas
 	manggaNew.TanggalPanen = manggaPrev.TanggalPanen
+
+	manggaNew.NamaPengirim = manggaPrev.NamaPengirim
 	// manggaNew.KuantitasManggaKg = manggaPrev.KuantitasManggaKg // gak perlu
 
 	// data tambahan dari fe : NamaPengirim, NamaPenerima, KuantitasManggaKg, HargaManggaPerKg, CaraPembayaran
@@ -633,7 +635,7 @@ func (s *ManggaContract) CreateTrxManggaByPedagang(ctx contractapi.TransactionCo
 	manggaNew.BenihID = manggaPrev.BenihID
 
 	manggaNew.IsAsset = false
-	manggaNew.IsConfirmed = false
+	manggaNew.IsConfirmed = true
 
 	// Get penangkar unique field from mangga aset
 	manggaNew.UmurBenih = manggaPrev.UmurBenih
@@ -655,6 +657,9 @@ func (s *ManggaContract) CreateTrxManggaByPedagang(ctx contractapi.TransactionCo
 	manggaNew.TanggalPanen = manggaPrev.TanggalPanen
 
 	//get pengumpul unique field from mangga aset
+	// manggaaNew.TeknikSorting = manggaPrev.TeknikSorting
+	manggaNew.MetodePengemasan = manggaPrev.MetodePengemasan
+	manggaNew.Pengangkutan = manggaPrev.Pengangkutan
 
 
 	// tambah data dari fe NamaPengirim, NamaPenerima, KuantitasManggaKg, HargaManggaPerKg, CaraPembayaran, teknikSorting, metodePengemasan, caraPengangkutan, pembeli
@@ -719,6 +724,7 @@ func (s *ManggaContract) ConfirmTrxByID(ctx contractapi.TransactionContextInterf
 
 	// Change the confirmed status
 	mangga.IsConfirmed = true
+	mangga.TanggalTransaksi = time.Now().Unix()
 
 	// Change createdAt
 	// mangga.CreatedAt = time.Now().Unix()
