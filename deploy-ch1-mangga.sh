@@ -59,7 +59,7 @@ presetup() {
 CHANNEL_NAME="channel1"
 CC_RUNTIME_LANGUAGE="golang"
 VERSION="3.22"
-SEQUENCE="2"
+SEQUENCE="4"
 CC_SRC_PATH="./artifacts/src/github.com/mangga/go" 
 CC_NAME="manggach1_cc" ## nama chaincode
 
@@ -269,9 +269,9 @@ chaincodeInvoke() {
         --peerAddresses localhost:8051 --tlsRootCertFiles $PEER0_PETANI_CA \
         --peerAddresses localhost:10051 --tlsRootCertFiles $PEER0_PENGUMPUL_CA \
         --peerAddresses localhost:11051 --tlsRootCertFiles $PEER0_PEDAGANG_CA \
-        -c '{"function": "CreateTrxManggaByPengumpul","Args":[
-        "{\"namaPengirim\":\"adang\",\"namaPenerima\":\"omen\",\"kuantitasManggaKg\": 50,\"hargaManggaPerKg\":50000,\"teknikSorting\":\"quick sort\",\"metodePengemasan\":\"karung goni\",\"pengangkutan\":\"peti kemas\",\"caraPembayaran\":\"gopay\"}", 
-        "aba00af4fba73ddb8ada7ac0ef2fec0cc3200ca91f68428eeac9725e38c7d357"
+        -c '{"function": "PanenMangga","Args":[
+        "{\"ukuran\":\"lonjong\",\"pestisida\":\"abcd\",\"kadarAir\":85.5,\"perlakuan\":\"baik\",\"produktivitas\":\"subur\",\"kuantitasManggaKg\": 100}",
+        "f05b894dfce8ffcf7e60fa1d78fa7399efdff157fe4e2d6e0e0274c06ec7d061"
     ]}'
 
 }
@@ -288,10 +288,10 @@ chaincodeQuery() {
         --cafile $ORDERER_CA \
         -C $CHANNEL_NAME -n ${CC_NAME}  \
         --peerAddresses localhost:7051 --tlsRootCertFiles $PEER0_PENANGKAR_CA \
-        -c '{"function": "GetHistoryForAssetByID","Args":["fa87ab87edf697acf4d5997373b60f866402695bf0aec0e76cde03c663c99193"]}'
+        -c '{"function": "GetHistoryForAssetByID","Args":["e2efc7c6bc37a249d57bba7e1366f470a1f05cc482ce6d8009ba0128e9217c59"]}'
 }
 
-chaincodeQuery
+# chaincodeQuery
 
 # Run this function if you add any new dependency in chaincode
 # presetup

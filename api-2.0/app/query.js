@@ -37,6 +37,7 @@ const queryTransaction = async (channelName, chaincodeName, args, fcn, role, use
       default:
         break;
     }
+    // console.log(random)
 
     userName = 'admin';
 
@@ -66,8 +67,10 @@ const queryTransaction = async (channelName, chaincodeName, args, fcn, role, use
     await gateway.connect(ccp, {
       wallet,
       identity: userName,
-      discovery: { enabled: true, asLocalhost: true },
+      discovery: { enabled: false, asLocalhost: true },
     });
+
+    console.log('cek error 1')
 
     // Get the network (channel) our contract is deployed to.
     const network = await gateway.getNetwork(channelName);
@@ -76,6 +79,9 @@ const queryTransaction = async (channelName, chaincodeName, args, fcn, role, use
     const contract = network.getContract(chaincodeName);
     let result;
 
+    console.log(fcn)
+
+
     switch (fcn) {
       case 'GetDocumentUsingCarContract':
         console.log('=============');
@@ -83,6 +89,7 @@ const queryTransaction = async (channelName, chaincodeName, args, fcn, role, use
         break;
       case 'GetManggaByID':
         console.log('=============');
+        // result = 'berhasil'
         result = await contract.evaluateTransaction('BawangContract:' + fcn, args[0]);
         break;
       case 'GetUserByID':
@@ -108,6 +115,9 @@ const queryTransaction = async (channelName, chaincodeName, args, fcn, role, use
       default:
         break;
     }
+
+    console.log('cek error 3')
+
 
     // if (fcn == "queryCar" || fcn =="queryCarsByOwner" || fcn == 'getHistoryForAsset' || fcn=='restictedMethod') {
     //     result = await contract.evaluateTransaction(fcn, args[0]);

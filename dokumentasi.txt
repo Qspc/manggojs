@@ -1,19 +1,14 @@
 Manggo JS
 
 - Pengertian 
-aplikasi rantai pasok buah mangga yang menggunakan teknologi blockchain
-
-- atribut 
-1. autentikasi
-Id, userName, password, email, namaLengkap, noTelp, tglLahir, nik, role, alamat  
-
-2. blockchain
+aplikasi rantai pasok buah mangga yang menggunakan teknologi blockchain  
 
 - channel
 1. channel pertama : channel1
 alur proses = penangkar -> petani -> pengumpul -> pedagang besar -> konsumen
 2. channel kedua : channel2
 alur proses : penangkar -> petani -> pengumpul -> pedagang kecil -> konsumen
+
 
 # PENANGKAR
 
@@ -31,7 +26,7 @@ body : {
     "chaincodeName": "manggach1_cc",
     "channelName": "channel1",
     "args": [
-        "{\"varietasBenih\":\"simanalagi\",\"umurBenih\":\"7 hari\",\"kuantitasBenihKg\": 10}"
+        "{\"varietasBenih\":\"simanalagi\",\"umurBenih\":\"7 hari\",\"kuantitasBenihKg\": 10,\"namaPengirim\":\"kahar\",}"
     ]
 }
 
@@ -54,7 +49,14 @@ body : {
     ]
 }
 
-3. fungsi membuat transaksi penangkar ke petani
+3. daftar benih asset yang telah dibuat dan siap dijual
+method : GET
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc/?peer=peer0.penangkar.example.com&fcn=GetManggaForQuery&args=["{\"selector\":{\"namaPengirim\":\"koharPenangkar\", \"isAsset\":true}}"]
+peer : peer0.penangkar.example.com
+fcn  : GetManggaForQuery
+argn : ["{\"selector\":{\"namaPengirim\":\"koharPenangkar\", \"isAsset\":true}}"]
+
+4. fungsi membuat transaksi penangkar ke petani
 method : POST
 link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc
 body : {
@@ -68,17 +70,10 @@ body : {
     "chaincodeName": "manggach1_cc",
     "channelName": "channel1",
     "args": [
-        "{\"namaPengirim\":\"kahar\",\"namaPenerima\":\"toni\",\"kuantitasBenihKg\": 10.5,\"hargaBenihPerKg\":10000.00,\"caraPembayaran\":\"tunai\"}", 
+        "{\"namaPenerima\":\"toni\",\"kuantitasBenihKg\": 10.5,\"hargaBenihPerKg\":10000,\"caraPembayaran\":\"tunai\"}", 
         "benihID"
     ]
 }
-
-4. daftar benih asset yang telah dibuat dan siap dijual
-method : GET
-link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc/?peer=peer0.penangkar.example.com&fcn=GetManggaForQuery&args=["{\"selector\":{\"namaPengirim\":\"koharPenangkar\", \"isAsset\":true}}"]
-peer : peer0.penangkar.example.com
-fcn  : GetManggaForQuery
-argn : ["{\"selector\":{\"namaPengirim\":\"koharPenangkar\", \"isAsset\":true}}"]
 
 5. transaksi keluar (daftar transaksi yg dikirim ke petani)
 method : GET
@@ -86,7 +81,7 @@ link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc/?peer=
 peer : peer0.penangkar.example.com
 fcn  : GetManggaForQuery
 argn : ["{\"selector\":{\"namaPengirim\":\"koharPenangkar\", \"isConfirmed\":false}}"]
-
+*mungkin ditambah isAsset = false
 
 # PETANI
 
@@ -118,10 +113,12 @@ body : {
     "chaincodeName": "manggach1_cc",
     "channelName": "channel1",
     "args": [
-        "{\"pupuk\":\"kompos\",\"lokasiLahan\":\"cikabayan\",\"kuantitasBenihKg\":10}", 
-        "id dari confirm TxID1"
+        "{\"pupuk\":\"kompos\",\"lokasiLahan\":\"cikabayan\",\"KuantitasBenihKg\":10}", 
+        "TxID1"
     ]
 }
+
+- daftar benih yg udah ditanam dan siap dipanen
 
 4. fungsi untuk panen mangga
 method : POST
@@ -138,11 +135,19 @@ body : {
     "channelName": "channel1",
     "args": [
         "{\"ukuran\":\"lonjong\",\"pestisida\":\"abcd\",\"kadarAir\":\"sedang\",\"perlakuan\":\"baik\",\"produktivitas\":\"subur\",\"kuantitasManggaKg\": 100}",
-        "id manggaID"
+        "manggaID"
     ]
 }
 
-5. fungsi transaksi petani dan pengumpul
+5. daftar manggaID yang sudah dibuat (aset mangga tersedia)
+method : GET 
+link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc/?peer=peer0.petani.example.com&fcn=GetManggaForQuery&args=["{\"selector\":{\"namaPengirim\":\"beniPetani\", \"isAsset\":true}}"]
+peer : peer0.petani.example.com
+fcn  : GetManggaForQuery
+argn : ["{\"selector\":{\"namaPengirim\":\"beniPetani\", \"isAsset\":true}}"]
+*tambah argumen
+
+6. fungsi transaksi petani dan pengumpul
 method : POST
 link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc
 body : {
@@ -156,24 +161,17 @@ body : {
     "chaincodeName": "manggach1_cc",
     "channelName": "channel1",
     "args": [
-        "{\"namaPengirim\":\"beniPetani\",\"namaPenerima\":\"adulPengumpul\",\"kuantitasManggaKg\": 100,\"hargaManggaPerKg\":30000,\"caraPembayaran\":\"tunai\"}", 
-        "id manggaID"
+        "{\"namaPenerima\":\"adulPengumpul\",\"kuantitasManggaKg\": 100,\"hargaManggaPerKg\":30000,\"caraPembayaran\":\"tunai\"}", 
+        "manggaID"
     ]
 }
-
-6. daftar manggaID yang sudah dibuat (aset mangga tersedia)
-method : GET 
-link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc/?peer=peer0.petani.example.com&fcn=GetManggaForQuery&args=["{\"selector\":{\"namaPengirim\":\"beniPetani\", \"isAsset\":true}}"]
-peer : peer0.petani.example.com
-fcn  : GetManggaForQuery
-argn : ["{\"selector\":{\"namaPengirim\":\"beniPetani\", \"isAsset\":true}}"]
 
 7. transaksi keluar (daftar transaksi yg dikirim ke pengumpul)
 method : GET
 link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc/?peer=peer0.petani.example.com&fcn=GetManggaForQuery&args=["{\"selector\":{\"namaPengirim\":\"beniPetani\", \"isConfirmed\":false}}"]
 peer : peer0.petani.example.com
 fcn  : GetManggaForQuery
-argn : ["{\"selector\":{\"namaPengirim\":\"beniPetani\", \"isConfirmed\":false}}"]
+argn : ["{\"selector\":{\"namaPengirim\":\"beniPetani\",\"isConfirmed\":false,\"isAsset\":false}}"]
 
 # PENGUMPUL 
 
@@ -205,8 +203,8 @@ body : {
     "chaincodeName": "manggach1_cc",
     "channelName": "channel1",
     "args": [
-        "{\"namaPengirim\":\"adulPengumpul\",\"namaPenerima\":\"dadangPedagang\",\"kuantitasManggaKg\": 100,\"hargaManggaPerKg\":40000,\"teknikSorting\":\"bubble sort\",\"metodePengemasan\":\"karung beras\",\"pengangkutan\":\"peti kemas\",\"caraPembayaran\":\"tunai\"}", 
-        "id TxID2"
+        "{\"namaPenerima\":\"dadangPedagang\",\"kuantitasManggaKg\": 100,\"hargaManggaPerKg\":40000,\"teknikSorting\":\"bubble sort\",\"metodePengemasan\":\"karung beras\",\"pengangkutan\":\"peti kemas\",\"caraPembayaran\":\"tunai\"}", 
+        "TxID2"
     ]
 }
 
@@ -215,7 +213,7 @@ method : GET
 link : http://localhost:4000/sc/channels/channel1/chaincodes/manggach1_cc/?peer=peer0.pengumpul.example.com&fcn=GetManggaForQuery&args=["{\"selector\":{\"namaPengirim\":\"adulPengumpul\", \"isConfirmed\":false}}"]
 peer : peer0.pengumpul.example.com
 fcn  : GetManggaForQuery
-argn : ["{\"selector\":{\"namaPengirim\":\"adulPengumpul\", \"isConfirmed\":false}}"]
+argn : ["{\"selector\":{\"namaPengirim\":\"adulPengumpul\",\"isConfirmed\":false}}"]
 
 # PEDAGANG 
 
@@ -247,7 +245,7 @@ body : {
     "chaincodeName": "manggach1_cc",
     "channelName": "channel1",
     "args": [
-        "{\"namaPengirim\":\"dadangPedagang\",\"namaPenerima\":\"omenKonsumen\",\"kuantitasManggaKg\": 100,\"hargaManggaPerKg\":50000,\"caraPembayaran\":\"tunai\",\"pembeli\":\"pavan\"}", 
+        "{\"namaPenerima\":\"omenKonsumen\",\"kuantitasManggaKg\": 100,\"hargaManggaPerKg\":50000,\"caraPembayaran\":\"tunai\}", 
         "id TxID3"
     ]
 }
@@ -350,7 +348,7 @@ method : GET
 link : http://localhost:4000/api/all/
 body : -
 
-4. get all data
+4. get profile
 method : GET
 link : http://localhost:4000/api/profile/${userName}
 body : -

@@ -65,7 +65,7 @@ exports.Query = async (req, res) => {
     console.log('args parse ==========', args);
 
     // proses GET/perintah di proses --> query
-    let message = await query.queryTranasction(channelName, chaincodeName, args, fcn, req.role, req.userName);
+    let message = await query.queryTransaction(channelName, chaincodeName, args, fcn, req.role, req.userName);
 
     logger.debug(message);
     // TODO do error handling here, meesage.contain error -->

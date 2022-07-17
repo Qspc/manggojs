@@ -87,7 +87,7 @@ app.post('/api/registrasi/', async (req, res) => {
     return res.status(400).json({ status: 'error' });
   }
 
-  res.json({ status: 'ok' });
+  // res.json({ status: 'ok' });
   res.status(201).json({ 'message': pesan, 'data': response });
 });
 
@@ -100,6 +100,7 @@ app.post('/api/login', async (req, res) => {
 
   // wallet input. login ke sistem blockchain --> helper
   let isUserRegistered = await helper.isUserRegistered(userName, data.role);
+  // console.log(isUserRegistered)
 
   // const refreshToken = accessToken;
 

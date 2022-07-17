@@ -205,12 +205,14 @@ const isUserRegistered = async (userName, role) => {
   } else if (role == 4) {
     roleAktor = 'Pedagang';
   }
+  console.log(roleAktor)
 
   const walletPath = await getWalletPath(roleAktor);
   const wallet = await Wallets.newFileSystemWallet(walletPath);
   console.log(`Wallet path: ${walletPath}`);
 
   const userIdentity = await wallet.get(userName);
+  console.log(userIdentity)
   if (userIdentity) {
     console.log(`An identity for the user ${userName} exists in the wallet`);
     return true;
@@ -404,7 +406,7 @@ const registerUserMongo = async (req, res) => {
   // enkripsi password
   const password = await bcrypt.hash(plainTextPassword, 10);
   const biodata = { userName, password, email, namaLengkap, noTelp, tglLahir, nik, role, alamat };
-  const response = await User.create(biodata);
+  const response = await user.create(biodata);
 
   return response;
 };
